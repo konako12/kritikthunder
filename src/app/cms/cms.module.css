@@ -1,0 +1,280 @@
+/* ═══════════════════════════════════════
+   KRITIK CMS — CSS Module
+   ═══════════════════════════════════════ */
+
+.layout {
+  display: flex; min-height: 100vh; font-size: 14px;
+  background: var(--bg-light); color: var(--text-dark);
+  --bg-light: #f4f5f8; --surface: #fff;
+  --border-light: #e5e7ef; --border-hi-light: #c8ccd8;
+  --text-dark: #1a1d2e; --text-sub-light: #5a6079; --text-muted-light: #9da3b8;
+  --gold-admin: #d4a800; --gold-bg: #fdf8e1;
+  --blue: #2563eb; --blue-bg: #eff6ff; --blue-border: #bfdbfe;
+  --green-admin: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
+  --red-admin: #dc2626; --red-bg: #fef2f2; --red-border: #fecaca;
+  --orange: #ea580c; --orange-bg: #fff7ed; --orange-border: #fed7aa;
+  --sidebar-w: 240px;
+  --score-great: #5dba7d; --score-good: #f5c842; --score-bad: #e05c5c;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0; background: var(--surface);
+  border-right: 1px solid var(--border-light); display: flex; flex-direction: column;
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
+}
+.sbLogo { padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border-light); }
+.sbLogoTop { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.sbLogoText {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
+  letter-spacing: 0.1em; color: var(--gold-admin);
+}
+.sbLogoText span { color: var(--text-muted-light); }
+.cmsBadge {
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border);
+  padding: 0.2rem 0.5rem; border-radius: 4px;
+}
+.sbLogoSub { font-size: 0.65rem; color: var(--text-muted-light); }
+
+/* 기자 선택 */
+.journalistSelect { padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border-light); }
+.jsLabel { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted-light); margin-bottom: 0.4rem; }
+.jsSelect {
+  width: 100%; padding: 0.5rem 0.7rem; font-size: 0.78rem;
+  background: var(--bg-light); border: 1px solid var(--border-light); border-radius: 6px;
+  color: var(--text-dark); appearance: none;
+}
+.jsSelect:focus { outline: none; border-color: var(--blue); }
+
+.sbNav { padding: 0.8rem 0; flex: 1; }
+.sbItem {
+  display: flex; align-items: center; gap: 0.7rem; width: 100%;
+  padding: 0.58rem 1.5rem; font-size: 0.8rem; font-weight: 500;
+  color: var(--text-sub-light); cursor: pointer; border: none;
+  border-left: 2px solid transparent; background: none; text-align: left; transition: all 0.15s;
+}
+.sbItem:hover { background: var(--bg-light); color: var(--text-dark); }
+.sbActive { background: var(--blue-bg) !important; color: var(--blue) !important; border-left-color: var(--blue) !important; font-weight: 700 !important; }
+.sbFooter { padding: 1rem 1.2rem; border-top: 1px solid var(--border-light); }
+.sbUser { display: flex; align-items: center; gap: 0.65rem; }
+.sbAvatar {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--blue-bg);
+  border: 1px solid var(--blue-border); display: flex; align-items: center;
+  justify-content: center; font-size: 0.78rem; font-weight: 700; color: var(--blue); flex-shrink: 0;
+}
+.sbUserName { font-size: 0.8rem; font-weight: 600; }
+.sbUserMedia { font-size: 0.65rem; color: var(--text-muted-light); }
+.sbUserEmpty { font-size: 0.75rem; color: var(--text-muted-light); text-align: center; }
+
+/* ── MAIN ── */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+.topbar {
+  height: 60px; background: var(--surface); border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; position: sticky; top: 0; z-index: 50;
+}
+.topbarLeft { display: flex; align-items: center; gap: 0.4rem; }
+.crumb { font-size: 0.72rem; color: var(--text-muted-light); }
+.crumbSep { color: var(--text-muted-light); margin: 0 0.3rem; }
+.crumbPage { font-size: 0.85rem; font-weight: 700; }
+.topbarRight { display: flex; gap: 0.6rem; }
+.content { padding: 2rem; flex: 1; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 0.42rem 1rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600;
+  border: none; transition: all 0.15s; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none;
+}
+.btnGhost { background: none; border: 1px solid var(--border-light); color: var(--text-sub-light); }
+.btnGhost:hover { border-color: var(--border-hi-light); color: var(--text-dark); }
+
+/* ── WRITE TAB ── */
+.writeGrid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; }
+
+.successBanner {
+  background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green-admin);
+  border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.2rem; font-size: 0.85rem; font-weight: 600;
+}
+.errorBanner {
+  background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red-admin);
+  border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.2rem; font-size: 0.85rem;
+}
+
+/* ── FORM CARDS ── */
+.formCard {
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: 10px; padding: 1.3rem 1.5rem; margin-bottom: 1.2rem;
+}
+.formCardTitle {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted-light); margin-bottom: 0.9rem;
+}
+.formInput {
+  width: 100%; background: var(--bg-light); border: 1px solid var(--border-light);
+  border-radius: 6px; padding: 0.6rem 0.85rem; color: var(--text-dark); font-size: 0.85rem;
+  transition: border-color 0.15s;
+}
+.formInput:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-bg); }
+.formInput::placeholder { color: var(--text-muted-light); }
+
+/* 게임 선택 */
+.gameSelectWrap { position: relative; }
+.selectedGame {
+  display: flex; align-items: center; gap: 0.8rem;
+  background: var(--blue-bg); border: 1px solid var(--blue-border);
+  border-radius: 8px; padding: 0.8rem 1rem;
+}
+.selectedGameImg { width: 36px; height: 48px; object-fit: cover; border-radius: 4px; }
+.selectedGameInfo { flex: 1; }
+.selectedGameTitle { font-size: 0.88rem; font-weight: 700; }
+.selectedGameSub { font-size: 0.7rem; color: var(--text-muted-light); }
+.clearGameBtn {
+  font-size: 0.72rem; color: var(--text-muted-light); background: none; border: 1px solid var(--border-light);
+  border-radius: 4px; padding: 0.3rem 0.6rem; cursor: pointer; transition: all 0.15s;
+}
+.clearGameBtn:hover { background: var(--bg-light); }
+.gameSearchBox { position: relative; }
+.gameDrop {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); z-index: 100; overflow: hidden;
+}
+.gameDropItem {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1rem;
+  cursor: pointer; border-bottom: 1px solid var(--border-light); transition: background 0.15s;
+}
+.gameDropItem:last-child { border-bottom: none; }
+.gameDropItem:hover { background: var(--bg-light); }
+.gameDropImg { width: 28px; height: 37px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+.gameDropTitle { font-size: 0.82rem; font-weight: 600; }
+.gameDropSub { font-size: 0.65rem; color: var(--text-muted-light); }
+
+/* 점수 */
+.scoreInputWrap { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
+.scoreInput { max-width: 120px; font-size: 1.2rem; font-weight: 700; text-align: center; }
+.scorePreview {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1;
+  padding: 0.15rem 0.7rem; border-radius: 7px; min-width: 60px; text-align: center;
+}
+.scoreGreat { background: var(--score-great); color: #fff; }
+.scoreGood { background: var(--score-good); color: #1a1200; }
+.scoreBad { background: var(--score-bad); color: #fff; }
+.scoreTbd { background: #e5e7ef; color: var(--text-muted-light); font-family: 'DM Mono', monospace; font-size: 1rem; }
+.scoreQuickBtns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.scoreQuick {
+  padding: 0.28rem 0.65rem; border-radius: 5px; font-size: 0.8rem; font-weight: 700;
+  border: none; cursor: pointer; transition: opacity 0.15s;
+}
+.scoreQuick:hover { opacity: 0.8; }
+
+/* 리뷰 텍스트 */
+.charCount { font-weight: 400; color: var(--text-muted-light); margin-left: 0.5rem; }
+.reviewTextarea {
+  width: 100%; background: var(--bg-light); border: 1px solid var(--border-light);
+  border-radius: 6px; padding: 0.8rem; color: var(--text-dark); font-size: 0.85rem;
+  line-height: 1.7; resize: vertical; transition: border-color 0.15s;
+}
+.reviewTextarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-bg); }
+.reviewTextarea::placeholder { color: var(--text-muted-light); }
+
+.submitBtn {
+  width: 100%; padding: 0.9rem; background: var(--blue); border: none; border-radius: 8px;
+  color: #fff; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.05em;
+  cursor: pointer; transition: background 0.2s, transform 0.1s;
+}
+.submitBtn:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
+.submitBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── 미리보기 ── */
+.previewPanel {
+  position: sticky; top: 80px; align-self: start;
+}
+.previewTitle {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted-light); margin-bottom: 0.8rem;
+}
+.previewCard {
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: 10px; padding: 1.3rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.previewCardTop {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
+}
+.previewInfo { display: flex; align-items: center; gap: 0.6rem; }
+.previewMedia {
+  font-family: 'DM Mono', monospace; font-size: 0.68rem; padding: 0.2rem 0.5rem;
+  background: #f4f5f8; border: 1px solid var(--border-light); border-radius: 3px;
+  color: var(--text-sub-light);
+}
+.previewReviewer { font-size: 0.8rem; color: var(--text-sub-light); }
+.previewScore {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; line-height: 1;
+  padding: 0.15rem 0.55rem; border-radius: 5px;
+}
+.previewGame {
+  display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem;
+  padding: 0.7rem; background: var(--bg-light); border-radius: 7px;
+}
+.previewGameImg { width: 32px; height: 42px; object-fit: cover; border-radius: 4px; }
+.previewGameTitle { font-size: 0.82rem; font-weight: 700; }
+.previewGameSub { font-size: 0.65rem; color: var(--text-muted-light); }
+.previewText { font-size: 0.82rem; line-height: 1.7; color: var(--text-sub-light); min-height: 100px; }
+.previewDate { font-size: 0.65rem; color: var(--text-muted-light); font-family: 'DM Mono', monospace; margin-top: 0.8rem; }
+
+/* ── 내 리뷰 ── */
+.myReviewCard {
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: 10px; padding: 1.3rem 1.5rem; margin-bottom: 1rem;
+  transition: border-color 0.15s;
+}
+.myReviewCard:hover { border-color: var(--border-hi-light); }
+.myRTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
+.myRLeft { display: flex; align-items: center; gap: 0.8rem; }
+.myRImg { width: 36px; height: 48px; object-fit: cover; border-radius: 4px; }
+.myRGame { font-size: 0.9rem; font-weight: 700; }
+.myRMeta { font-size: 0.68rem; color: var(--text-muted-light); font-family: 'DM Mono', monospace; margin-top: 0.15rem; }
+.myRScore {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; line-height: 1;
+  padding: 0.1rem 0.55rem; border-radius: 5px;
+}
+.csGreat { background: var(--score-great); color: #fff; }
+.csGood { background: var(--score-good); color: #1a1200; }
+.csBad { background: var(--score-bad); color: #fff; }
+.myRText { font-size: 0.82rem; line-height: 1.7; color: var(--text-sub-light); }
+
+/* ── 프로필 ── */
+.profileCard {
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: 12px; padding: 2.5rem; text-align: center;
+}
+.profileAvatar {
+  width: 72px; height: 72px; border-radius: 50%; background: var(--blue-bg);
+  border: 2px solid var(--blue-border); display: flex; align-items: center;
+  justify-content: center; font-size: 1.8rem; font-weight: 700; color: var(--blue);
+  margin: 0 auto 1rem;
+}
+.profileName { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem; }
+.profileMedia { font-size: 0.85rem; color: var(--text-muted-light); font-family: 'DM Mono', monospace; margin-bottom: 1.5rem; }
+.profileStats { display: flex; gap: 2rem; justify-content: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-light); }
+.profileStat { text-align: center; }
+.profileStatNum { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; line-height: 1; }
+.profileStatLabel { font-size: 0.68rem; color: var(--text-muted-light); margin-top: 0.2rem; }
+.approved { color: var(--green-admin); }
+.pending { color: var(--orange); font-size: 1rem !important; }
+.profileInfo { text-align: left; }
+.profileInfoRow {
+  display: flex; justify-content: space-between; padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border-light); font-size: 0.82rem;
+}
+.profileInfoRow:last-child { border-bottom: none; }
+.profileInfoRow span:first-child { color: var(--text-muted-light); }
+
+.loading { text-align: center; padding: 2rem; color: var(--text-muted-light); }
+.emptyS { text-align: center; padding: 2.5rem; color: var(--text-muted-light); font-size: 0.85rem; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .writeGrid { grid-template-columns: 1fr; }
+}
