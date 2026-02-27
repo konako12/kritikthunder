@@ -102,16 +102,20 @@
 .heroBg {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: center 20%;
-  filter: brightness(0.58) saturate(1.0);
+  /* 상단 70% 원본 이미지가 선명하게 보이도록 brightness 높임 */
+  filter: brightness(0.88) saturate(1.05);
   transform: scale(1.04);
   animation: slowZoom 14s ease-out forwards;
 }
 .heroVignette {
   position: absolute; inset: 0;
   background:
-    linear-gradient(to right, rgba(6,8,12,0.85) 28%, rgba(6,8,12,0.15) 62%, transparent 78%),
-    linear-gradient(to top, rgba(6,8,12,1) 0%, rgba(6,8,12,0.45) 18%, transparent 42%),
-    linear-gradient(to bottom, rgba(6,8,12,0.32) 0%, transparent 16%);
+    /* 텍스트 좌측 가독성 — 기존보다 훨씬 옅게 */
+    linear-gradient(to right, rgba(6,8,12,0.62) 0%, rgba(6,8,12,0.22) 32%, transparent 52%),
+    /* 하단 30%만 강하게 다크 처리 — 텍스트·버튼 보호 */
+    linear-gradient(to top, rgba(6,8,12,1) 0%, rgba(6,8,12,0.88) 12%, rgba(6,8,12,0.45) 26%, transparent 38%),
+    /* 최상단 네비게이션 영역만 살짝 */
+    linear-gradient(to bottom, rgba(6,8,12,0.38) 0%, transparent 10%);
 }
 /* heroOuter: 1280px 제한 wrapper */
 .heroOuter {
@@ -195,46 +199,46 @@
 .rowMore:hover { color: var(--gold); }
 
 /* ══════════════════════════════════════════
-   TOP 5 — 촘촘한 한 줄 레이아웃
+   TOP 5 — 기존 대비 1.5배 확대
    ══════════════════════════════════════════ */
-.top5List { display: flex; flex-direction: column; gap: 0.42rem; }
+.top5List { display: flex; flex-direction: column; gap: 0.65rem; }
 .top5Item {
-  display: flex; align-items: center; gap: 0.75rem;
+  display: flex; align-items: center; gap: 1.12rem;
   background: var(--card); border: 1px solid var(--border);
-  border-radius: 8px; padding: 0.6rem 0.9rem;
+  border-radius: 10px; padding: 0.9rem 1.35rem;
   transition: border-color 0.18s, transform 0.15s; color: inherit;
 }
 .top5Item:hover { border-color: var(--border-hi); transform: translateX(4px); }
 .top5N {
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.55rem; line-height: 1;
-  min-width: 26px; text-align: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.32rem; line-height: 1;
+  min-width: 38px; text-align: center;
   -webkit-text-stroke: 1px var(--text-muted); color: transparent;
   flex-shrink: 0;
 }
 .top5Gold { -webkit-text-stroke: 1px var(--gold); }
 .top5Img {
-  width: 34px; height: 45px; object-fit: cover;
-  border-radius: 4px; flex-shrink: 0;
+  width: 51px; height: 68px; object-fit: cover;
+  border-radius: 5px; flex-shrink: 0;
 }
 .top5Info { flex: 1; min-width: 0; }
 .top5T {
-  font-size: 0.86rem; font-weight: 700;
+  font-size: 1.28rem; font-weight: 700;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.top5M { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.1rem; }
-.top5Tags { display: flex; gap: 0.25rem; margin-top: 0.28rem; flex-wrap: wrap; }
+.top5M { font-size: 0.97rem; color: var(--text-muted); margin-top: 0.15rem; }
+.top5Tags { display: flex; gap: 0.38rem; margin-top: 0.42rem; flex-wrap: wrap; }
 .tt {
-  font-size: 0.57rem; padding: 0.1rem 0.36rem; border-radius: 2px;
+  font-size: 0.85rem; padding: 0.15rem 0.54rem; border-radius: 3px;
   background: var(--elevated); border: 1px solid var(--border); color: var(--text-muted);
 }
 /* 점수 칩 — 오른쪽 고정, 레이블 없음 */
 .t5s {
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.45rem; line-height: 1;
-  padding: 0.06rem 0.42rem; border-radius: 5px; flex-shrink: 0;
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.17rem; line-height: 1;
+  padding: 0.09rem 0.63rem; border-radius: 7px; flex-shrink: 0;
 }
 .t5sTbd {
-  font-family: 'DM Mono', monospace; font-size: 0.64rem;
-  padding: 0.1rem 0.48rem; border-radius: 5px;
+  font-family: 'DM Mono', monospace; font-size: 0.96rem;
+  padding: 0.15rem 0.72rem; border-radius: 7px;
   background: var(--elevated); color: var(--text-muted); flex-shrink: 0;
 }
 
@@ -289,31 +293,38 @@
 .posterS { font-size: 0.61rem; color: var(--text-muted); margin-top: 0.08rem; }
 
 /* ══════════════════════════════════════════
-   REVIEW 카드
+   REVIEW 그리드 (가로 스크롤 → 4열 고정 그리드)
    ══════════════════════════════════════════ */
+.reviewGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
 .reviewCard {
-  flex-shrink: 0; width: 262px; background: var(--card);
+  background: var(--card);
   border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
   cursor: pointer; transition: border-color 0.18s;
+  display: flex; flex-direction: column;
 }
 .reviewCard:hover { border-color: var(--border-hi); }
 .rcTop {
   display: flex; align-items: center; gap: 0.75rem;
   padding: 0.9rem; border-bottom: 1px solid var(--border);
 }
-.rcImg { width: 34px; height: 45px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-.rcGame { font-size: 0.78rem; font-weight: 700; line-height: 1.2; }
-.rcMedia { font-size: 0.62rem; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 0.12rem; }
+.rcImg { width: 36px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.rcGame { font-size: 0.8rem; font-weight: 700; line-height: 1.25; }
+.rcMedia { font-size: 0.63rem; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 0.12rem; }
 .rcScore {
-  margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; line-height: 1;
-  padding: 0.08rem 0.42rem; border-radius: 4px; flex-shrink: 0;
+  margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; line-height: 1;
+  padding: 0.08rem 0.45rem; border-radius: 4px; flex-shrink: 0;
 }
-.rcBody { padding: 0.8rem 0.9rem; }
+.rcBody { padding: 0.85rem 1rem; flex: 1; display: flex; flex-direction: column; }
 .rcText {
-  font-size: 0.76rem; color: var(--text-sub); line-height: 1.68;
+  font-size: 0.78rem; color: var(--text-sub); line-height: 1.72; flex: 1;
+  /* 3줄 미리보기 */
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-.rcFoot { display: flex; justify-content: space-between; margin-top: 0.65rem; }
+.rcFoot { display: flex; justify-content: space-between; margin-top: 0.7rem; }
 .rcName { font-size: 0.65rem; color: var(--text-muted); }
 .rcDate { font-size: 0.62rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
 
@@ -371,6 +382,10 @@
 /* ══════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .reviewGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 768px) {
   .wrap { padding: 0 1.2rem; }
   .navInner { padding: 0 1.2rem; }
@@ -379,6 +394,8 @@
   .heroTitle { font-size: 2.6rem; }
   .hscroll { padding-left: 1.2rem; }
   .navLinks a:not(.loginBtn) { display: none; }
+  .reviewGrid { grid-template-columns: 1fr; }
+  .top5T { font-size: 1rem; }
   .footerInner { flex-direction: column; gap: 1rem; text-align: center; }
   .ftText { text-align: center; }
 }

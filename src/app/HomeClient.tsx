@@ -213,16 +213,14 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
         </div>
       </section>
 
-      {/* ── 전문가 최신 리뷰 ── */}
+      {/* ── 전문가 최신 리뷰 — 4열 고정 그리드 ── */}
       <section className={s.section}>
         <div className={s.wrap}>
           <div className={s.rowHead}>
             <span className={s.rowTitle}>전문가 <span className={s.hl}>최신 리뷰</span></span>
             <Link href="/reviews" className={s.rowMore}>전체 리뷰 →</Link>
           </div>
-        </div>
-        <div className={s.hsWrap}>
-          <div className={s.hscroll}>
+          <div className={s.reviewGrid}>
             {reviews.map((r) => {
               const game = allGames.find((g) => g.id === r.game_id)
               return (
@@ -248,7 +246,6 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
               )
             })}
           </div>
-          <div className={s.fadeR} />
         </div>
       </section>
 
