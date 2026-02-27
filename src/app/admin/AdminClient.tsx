@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Game, Journalist, Report } from '@/lib/types'
+import { createClient } from '@/lib/supabase-client'
 import s from './admin.module.css'
 
 type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'journalists' | 'reports'
@@ -35,6 +37,7 @@ function statusBadge(status: Game['status']) {
 }
 
 export default function AdminClient({ initGames, initJournalists, initReports, featuredGameId: initFeatId }: Props) {
+  const router = useRouter()
   const [page, setPage] = useState<Page>('dashboard')
   const [games, setGames] = useState<Game[]>(initGames)
   const [journalists, setJournalists] = useState<Journalist[]>(initJournalists)
@@ -59,8 +62,14 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
   const [fPlats, setFPlats]     = useState<string[]>([])
   const [fErrors, setFErrors]   = useState<Record<string, string>>({})
 
+  // 이미지 업로드 (add form)
+  const [fFile, setFFile] = useState<File | null>(null)
+  const [fPreview, setFPreview] = useState('')
+
   // 편집 모달
   const [editGame, setEditGame] = useState<Game | null>(null)
+  const [editFile, setEditFile] = useState<File | null>(null)
+  const [editPreview, setEditPreview] = useState('')
 
   // 토스트
   const [toast, setToast] = useState('')
@@ -92,6 +101,32 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
     return res.status === 204 ? null : res.json()
   }
 
+  async function uploadGameCover(file: File): Promise<string | null> {
+    const supabase = createClient()
+    const ext = file.name.split('.').pop()
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('game-covers').upload(filename, file)
+    if (error) { showToast('이미지 업로드 실패: ' + error.message); return null }
+    return supabase.storage.from('game-covers').getPublicUrl(filename).data.publicUrl
+  }
+
+  function handleFileSelect(
+    file: File,
+    setFile: (f: File | null) => void,
+    setPreview: (url: string) => void,
+  ) {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      showToast('JPG, PNG, WebP 파일만 지원합니다.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('파일 크기는 5MB 이하여야 합니다.')
+      return
+    }
+    setFile(file)
+    setPreview(URL.createObjectURL(file))
+  }
+
   async function addGame() {
     const errs: Record<string, string> = {}
     if (!fTitle.trim()) errs.title = '제목을 입력해주세요'
@@ -103,12 +138,17 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
     if (Object.keys(errs).length) return
 
     try {
+      let coverUrl: string | null = fImg.trim() || null
+      if (fFile) {
+        coverUrl = await uploadGameCover(fFile)
+        if (!coverUrl) return
+      }
       const data = await apiCall('/api/games', 'POST', {
         title: fTitle.trim(), developer: fDev.trim(),
         publisher: fPub.trim() || fDev.trim(),
         year: Number(fYear), genre: fGenre, platforms: fPlats,
         age_rating: fRating, status: fStatus,
-        cover_url: fImg.trim() || null, description: fDesc.trim() || null,
+        cover_url: coverUrl, description: fDesc.trim() || null,
       })
       setGames([data, ...games])
       resetForm()
@@ -121,7 +161,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
   function resetForm() {
     setFTitle(''); setFDev(''); setFPub(''); setFYear(''); setFGenre('')
     setFRating('전체이용가'); setFStatus('published'); setFImg(''); setFDesc('')
-    setFPlats([]); setFErrors({})
+    setFPlats([]); setFErrors({}); setFFile(null); setFPreview('')
   }
 
   async function deleteGame(id: number, title: string) {
@@ -139,12 +179,19 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
   async function saveEdit() {
     if (!editGame) return
     try {
+      let coverUrl = editGame.cover_url
+      if (editFile) {
+        const uploaded = await uploadGameCover(editFile)
+        if (!uploaded) return
+        coverUrl = uploaded
+      }
       const data = await apiCall(`/api/games/${editGame.id}`, 'PATCH', {
         title: editGame.title, developer: editGame.developer,
         year: editGame.year, genre: editGame.genre, status: editGame.status,
+        cover_url: coverUrl,
       })
       setGames(games.map((g) => (g.id === data.id ? data : g)))
-      setEditGame(null)
+      setEditGame(null); setEditFile(null); setEditPreview('')
       showToast(`✅ "${data.title}" 정보가 수정됐어요`)
     } catch (e: unknown) { showToast(`⚠️ ${(e as Error).message}`) }
   }
@@ -225,6 +272,16 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
               <div className={s.sbUserEmail}>admin@kritik.kr</div>
             </div>
           </div>
+          <button
+            className={s.logoutBtn}
+            onClick={async () => {
+              const supabase = createClient()
+              await supabase.auth.signOut()
+              router.push('/login')
+            }}
+          >
+            로그아웃
+          </button>
         </div>
       </aside>
 
@@ -382,7 +439,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
                           <td><span className={`${s.chip} ${scoreChipClass(g.critic_score)}`}>{g.critic_score ?? 'TBD'}</span></td>
                           <td><span className={`${s.badge} ${sb.cls}`}>{sb.label}</span></td>
                           <td>
-                            <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} style={{ marginRight: 4 }} onClick={() => setEditGame(g)}>수정</button>
+                            <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} style={{ marginRight: 4 }} onClick={() => { setEditGame(g); setEditFile(null); setEditPreview(g.cover_url ?? '') }}>수정</button>
                             <button className={`${s.btn} ${s.btnDanger} ${s.btnSm}`} onClick={() => deleteGame(g.id, g.title)}>삭제</button>
                           </td>
                         </tr>
@@ -463,8 +520,21 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
 
                   <div className={s.formSectionTitle} style={{ marginTop: '1rem' }}>미디어</div>
                   <div className={s.formGroup}>
-                    <label className={s.formLabel}>커버 이미지 URL</label>
-                    <input className={s.formInput} value={fImg} onChange={(e) => setFImg(e.target.value)} placeholder="https://..." />
+                    <label className={s.formLabel}>커버 이미지</label>
+                    {(fPreview || fImg) && (
+                      <div className={s.imgPreviewWrap}>
+                        <img className={s.imgPreview} src={fPreview || fImg} alt="미리보기" />
+                        <button className={s.imgRemove} onClick={() => { setFFile(null); setFPreview(''); setFImg('') }}>제거</button>
+                      </div>
+                    )}
+                    <label className={s.uploadBtn}>
+                      파일 업로드
+                      <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) { handleFileSelect(f, setFFile, setFPreview); setFImg('') } }} />
+                    </label>
+                    <div className={s.uploadHint}>JPG, PNG, WebP · 최대 5MB</div>
+                    <div className={s.uploadOr}>또는 URL 직접 입력</div>
+                    <input className={s.formInput} value={fImg} onChange={(e) => { setFImg(e.target.value); setFFile(null); setFPreview('') }} placeholder="https://..." disabled={!!fFile} />
                   </div>
                   <div className={s.formGroup}>
                     <label className={s.formLabel}>게임 소개</label>
@@ -643,6 +713,23 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
                   <option value="draft">임시저장</option>
                   <option value="upcoming">출시예정</option>
                 </select>
+              </div>
+              <div className={s.formGroup}>
+                <label className={s.formLabel}>커버 이미지</label>
+                {(editPreview) && (
+                  <div className={s.imgPreviewWrap}>
+                    <img className={s.imgPreview} src={editPreview} alt="미리보기" />
+                    <button className={s.imgRemove} onClick={() => { setEditFile(null); setEditPreview(''); setEditGame({ ...editGame, cover_url: null }) }}>제거</button>
+                  </div>
+                )}
+                <label className={s.uploadBtn}>
+                  파일 업로드
+                  <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f, setEditFile, setEditPreview) }} />
+                </label>
+                <div className={s.uploadHint}>JPG, PNG, WebP · 최대 5MB</div>
+                <div className={s.uploadOr}>또는 URL 직접 입력</div>
+                <input className={s.formInput} value={editGame.cover_url ?? ''} onChange={(e) => { setEditGame({ ...editGame, cover_url: e.target.value || null }); setEditFile(null); setEditPreview(e.target.value) }} placeholder="https://..." disabled={!!editFile} />
               </div>
             </div>
             <div className={s.modalFoot}>

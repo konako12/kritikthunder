@@ -1,9 +1,14 @@
 export const dynamic = 'force-dynamic'
 
-import { createAdminClient } from '@/lib/supabase-server'
+import { redirect } from 'next/navigation'
+import { createClient, createAdminClient } from '@/lib/supabase-server'
 import AdminClient from './AdminClient'
 
 export default async function AdminPage() {
+  const authSupabase = await createClient()
+  const { data: { user } } = await authSupabase.auth.getUser()
+  if (!user) redirect('/login')
+
   const supabase = createAdminClient()
 
   const [gamesRes, journalistsRes, reportsRes, settingsRes] = await Promise.all([

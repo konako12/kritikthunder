@@ -67,6 +67,16 @@
 .sbUserMedia { font-size: 0.65rem; color: var(--text-muted-light); }
 .sbUserEmpty { font-size: 0.75rem; color: var(--text-muted-light); text-align: center; }
 
+/* 로그아웃 버튼 */
+.logoutBtn {
+  display: block; width: 100%; margin-top: 0.75rem;
+  padding: 0.42rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500;
+  background: none; border: 1px solid var(--border-light);
+  color: var(--text-muted-light); cursor: pointer; transition: all 0.15s;
+  font-family: inherit;
+}
+.logoutBtn:hover { border-color: var(--red-admin); color: var(--red-admin); background: var(--red-bg); }
+
 /* ── MAIN ── */
 .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
 .topbar {
@@ -242,6 +252,54 @@
 .csGood { background: var(--score-good); color: #1a1200; }
 .csBad { background: var(--score-bad); color: #fff; }
 .myRText { font-size: 0.82rem; line-height: 1.7; color: var(--text-sub-light); }
+
+/* ── 수정/삭제 버튼 ── */
+.reviewActions { display: flex; gap: 0.3rem; }
+.editBtn, .deleteBtn {
+  background: none; border: 1px solid var(--border-light);
+  border-radius: 5px; padding: 0.3rem 0.5rem; font-size: 0.78rem;
+  cursor: pointer; transition: all 0.15s; line-height: 1;
+}
+.editBtn:hover { border-color: var(--blue); background: var(--blue-bg); }
+.deleteBtn:hover { border-color: var(--red-admin); background: var(--red-bg); }
+
+/* ── 인라인 수정 폼 ── */
+.editForm {
+  border-radius: 8px; background: var(--bg-light);
+  padding: 1rem; margin: -0.3rem;
+}
+.editFormTop {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
+}
+.cancelEditBtn {
+  font-size: 0.72rem; background: none; border: 1px solid var(--border-light);
+  border-radius: 4px; padding: 0.3rem 0.7rem; cursor: pointer; color: var(--text-muted-light);
+  transition: all 0.15s;
+}
+.cancelEditBtn:hover { border-color: var(--border-hi-light); color: var(--text-dark); }
+.editRow { display: flex; gap: 1rem; margin-bottom: 0.8rem; }
+.editField { flex: 1; margin-bottom: 0.8rem; }
+.editLabel {
+  display: block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-muted-light); margin-bottom: 0.4rem;
+}
+.saveEditBtn {
+  padding: 0.55rem 1.5rem; background: var(--blue); border: none; border-radius: 6px;
+  color: #fff; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  transition: background 0.15s; font-family: inherit;
+}
+.saveEditBtn:hover:not(:disabled) { background: #1d4ed8; }
+.saveEditBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── 프로필 로그아웃 ── */
+.profileLogoutBtn {
+  display: block; width: 100%; margin-top: 1rem;
+  padding: 0.65rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
+  background: none; border: 1px solid var(--border-light);
+  color: var(--text-muted-light); cursor: pointer; transition: all 0.15s;
+  font-family: inherit;
+}
+.profileLogoutBtn:hover { border-color: var(--red-admin); color: var(--red-admin); background: var(--red-bg); }
 
 /* ── 프로필 ── */
 .profileCard {

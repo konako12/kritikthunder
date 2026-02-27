@@ -80,16 +80,16 @@
 .heroBg {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: center 20%;
-  filter: brightness(0.4) saturate(0.75);
+  filter: brightness(0.62) saturate(1.0);
   transform: scale(1.04);
   animation: slowZoom 14s ease-out forwards;
 }
 .heroVignette {
   position: absolute; inset: 0;
   background:
-    linear-gradient(to right, rgba(6,8,12,0.88) 35%, transparent 72%),
-    linear-gradient(to top, rgba(6,8,12,1) 0%, transparent 45%),
-    linear-gradient(to bottom, rgba(6,8,12,0.5) 0%, transparent 20%);
+    linear-gradient(to right, rgba(6,8,12,0.82) 30%, rgba(6,8,12,0.18) 65%, transparent 80%),
+    linear-gradient(to top, rgba(6,8,12,1) 0%, rgba(6,8,12,0.5) 20%, transparent 45%),
+    linear-gradient(to bottom, rgba(6,8,12,0.35) 0%, transparent 18%);
 }
 .heroBody {
   position: relative; z-index: 2; padding: 0 3rem 5.5rem; max-width: 580px;

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Journalist } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
@@ -26,62 +27,59 @@ interface CriticReviewRow {
 
 interface Props {
   games: GameBasic[]
-  journalists: Journalist[]
+  journalist: Journalist
+  initialReviews: CriticReviewRow[]
 }
 
 type Tab = 'write' | 'myReviews' | 'profile'
 
-export default function CmsClient({ games, journalists }: Props) {
+function scoreCls(n: number, s: Record<string, string>) {
+  if (n >= 90) return s.scoreGreat
+  if (n >= 75) return s.scoreGood
+  return s.scoreBad
+}
+
+export default function CmsClient({ games, journalist, initialReviews }: Props) {
+  const router = useRouter()
   const [tab, setTab] = useState<Tab>('write')
 
-  // 현재 로그인된 기자 (실제 서비스에서는 Supabase Auth 세션 사용)
-  const [journalist, setJournalist] = useState<Journalist | null>(
-    journalists.length > 0 ? journalists[0] : null
-  )
+  // ── 리뷰 목록 (서버 초기값 + 클라이언트 갱신)
+  const [myReviews, setMyReviews] = useState<CriticReviewRow[]>(initialReviews)
+  const [reviewCount, setReviewCount] = useState(journalist.review_count)
 
-  // 리뷰 목록
-  const [myReviews, setMyReviews] = useState<CriticReviewRow[]>([])
-  const [loadingReviews, setLoadingReviews] = useState(false)
-
-  // 리뷰 작성 폼
+  // ── 리뷰 작성 폼
   const [selGame, setSelGame] = useState<GameBasic | null>(null)
   const [gameSearch, setGameSearch] = useState('')
   const [gameDropOpen, setGameDropOpen] = useState(false)
   const [score, setScore] = useState('')
-  const [scoreHover, setScoreHover] = useState<number | null>(null)
   const [reviewText, setReviewText] = useState('')
   const [publishDate, setPublishDate] = useState(new Date().toISOString().slice(0, 10))
   const [submitting, setSubmitting] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
-  // 점수 미리보기 색상
-  const scoreNum = Number(score)
-  function scoreCls(n: number) {
-    if (n >= 90) return s.scoreGreat
-    if (n >= 75) return s.scoreGood
-    return s.scoreBad
-  }
+  // ── 리뷰 수정 상태
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editScore, setEditScore] = useState('')
+  const [editText, setEditText] = useState('')
+  const [editDate, setEditDate] = useState('')
+  const [editSubmitting, setEditSubmitting] = useState(false)
 
+  const scoreNum = Number(score)
   const filteredGames = gameSearch.trim()
     ? games.filter((g) => g.title.toLowerCase().includes(gameSearch.toLowerCase()))
     : games
 
-  async function loadMyReviews() {
-    if (!journalist) return
-    setLoadingReviews(true)
+  // ── 로그아웃
+  async function handleLogout() {
     const supabase = createClient()
-    const { data } = await supabase
-      .from('critic_reviews')
-      .select('*')
-      .eq('reviewer_name', journalist.name)
-      .order('published_at', { ascending: false })
-    setMyReviews(data ?? [])
-    setLoadingReviews(false)
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
   }
 
+  // ── 리뷰 등록
   async function submitReview() {
-    if (!journalist) { setErrorMsg('기자 계정을 선택해주세요'); return }
     if (!selGame) { setErrorMsg('게임을 선택해주세요'); return }
     if (!score || scoreNum < 0 || scoreNum > 100) { setErrorMsg('점수를 0~100 사이로 입력해주세요'); return }
     if (reviewText.trim().length < 50) { setErrorMsg('리뷰를 50자 이상 입력해주세요'); return }
@@ -90,31 +88,89 @@ export default function CmsClient({ games, journalists }: Props) {
     setErrorMsg('')
 
     const supabase = createClient()
-    const { error } = await supabase.from('critic_reviews').insert({
-      game_id: selGame.id,
-      media: journalist.media,
-      reviewer_name: journalist.name,
-      score: scoreNum,
-      review_text: reviewText.trim(),
-      published_at: publishDate,
-    })
+    const { data, error } = await supabase
+      .from('critic_reviews')
+      .insert({
+        game_id: selGame.id,
+        media: journalist.media,
+        reviewer_name: journalist.name,
+        score: scoreNum,
+        review_text: reviewText.trim(),
+        published_at: publishDate,
+      })
+      .select()
+      .single()
 
     setSubmitting(false)
 
     if (error) { setErrorMsg(error.message); return }
 
-    setSuccessMsg(`✅ "${selGame.title}" 리뷰가 등록됐습니다!`)
+    // 로컬 상태 업데이트 (트리거가 DB의 critic_score + review_count 자동 갱신)
+    setMyReviews((prev) => [data, ...prev])
+    setReviewCount((c) => c + 1)
+    setSuccessMsg(`✅ "${selGame.title}" 리뷰가 등록됐습니다. 메타스코어가 자동 업데이트됩니다.`)
     setSelGame(null)
     setScore('')
     setReviewText('')
     setPublishDate(new Date().toISOString().slice(0, 10))
+    setTimeout(() => setSuccessMsg(''), 4000)
+  }
 
-    setTimeout(() => setSuccessMsg(''), 3000)
+  // ── 수정 시작
+  function startEdit(r: CriticReviewRow) {
+    setEditingId(r.id)
+    setEditScore(String(r.score))
+    setEditText(r.review_text)
+    setEditDate(r.published_at)
+  }
+
+  // ── 수정 저장
+  async function saveEdit(reviewId: number) {
+    const n = Number(editScore)
+    if (!editScore || n < 0 || n > 100) { alert('점수를 0~100 사이로 입력해주세요'); return }
+    if (editText.trim().length < 50) { alert('리뷰를 50자 이상 입력해주세요'); return }
+
+    setEditSubmitting(true)
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('critic_reviews')
+      .update({ score: n, review_text: editText.trim(), published_at: editDate })
+      .eq('id', reviewId)
+      .select()
+      .single()
+
+    setEditSubmitting(false)
+
+    if (error) { alert(error.message); return }
+
+    setMyReviews((prev) => prev.map((r) => (r.id === reviewId ? data : r)))
+    setEditingId(null)
+  }
+
+  // ── 수정 취소
+  function cancelEdit() {
+    setEditingId(null)
+  }
+
+  // ── 삭제
+  async function deleteReview(reviewId: number, gameTitle: string) {
+    if (!window.confirm(`"${gameTitle}" 리뷰를 삭제하시겠습니까?\n삭제하면 메타스코어가 자동으로 재계산됩니다.`)) return
+
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('critic_reviews')
+      .delete()
+      .eq('id', reviewId)
+
+    if (error) { alert(error.message); return }
+
+    setMyReviews((prev) => prev.filter((r) => r.id !== reviewId))
+    setReviewCount((c) => Math.max(c - 1, 0))
   }
 
   return (
     <div className={s.layout}>
-      {/* SIDEBAR */}
+      {/* ── SIDEBAR ── */}
       <aside className={s.sidebar}>
         <div className={s.sbLogo}>
           <div>
@@ -126,24 +182,6 @@ export default function CmsClient({ games, journalists }: Props) {
           </div>
         </div>
 
-        {/* 기자 선택 (실제 서비스에서는 Supabase Auth로 대체) */}
-        <div className={s.journalistSelect}>
-          <div className={s.jsLabel}>현재 기자 계정</div>
-          <select
-            className={s.jsSelect}
-            value={journalist?.id ?? ''}
-            onChange={(e) => {
-              const j = journalists.find((x) => x.id === Number(e.target.value))
-              setJournalist(j ?? null)
-            }}
-          >
-            <option value="">기자 선택...</option>
-            {journalists.map((j) => (
-              <option key={j.id} value={j.id}>{j.name} ({j.media})</option>
-            ))}
-          </select>
-        </div>
-
         <nav className={s.sbNav}>
           <button
             className={`${s.sbItem} ${tab === 'write' ? s.sbActive : ''}`}
@@ -153,9 +191,9 @@ export default function CmsClient({ games, journalists }: Props) {
           </button>
           <button
             className={`${s.sbItem} ${tab === 'myReviews' ? s.sbActive : ''}`}
-            onClick={() => { setTab('myReviews'); loadMyReviews() }}
+            onClick={() => setTab('myReviews')}
           >
-            <span>📋</span> 내 리뷰
+            <span>📋</span> 내 리뷰 ({myReviews.length})
           </button>
           <button
             className={`${s.sbItem} ${tab === 'profile' ? s.sbActive : ''}`}
@@ -166,21 +204,20 @@ export default function CmsClient({ games, journalists }: Props) {
         </nav>
 
         <div className={s.sbFooter}>
-          {journalist ? (
-            <div className={s.sbUser}>
-              <div className={s.sbAvatar}>{journalist.name[0]}</div>
-              <div>
-                <div className={s.sbUserName}>{journalist.name}</div>
-                <div className={s.sbUserMedia}>{journalist.media}</div>
-              </div>
+          <div className={s.sbUser}>
+            <div className={s.sbAvatar}>{journalist.name[0]}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className={s.sbUserName}>{journalist.name}</div>
+              <div className={s.sbUserMedia}>{journalist.media}</div>
             </div>
-          ) : (
-            <div className={s.sbUserEmpty}>기자를 선택해주세요</div>
-          )}
+          </div>
+          <button className={s.logoutBtn} onClick={handleLogout}>
+            로그아웃
+          </button>
         </div>
       </aside>
 
-      {/* MAIN */}
+      {/* ── MAIN ── */}
       <div className={s.main}>
         <div className={s.topbar}>
           <div className={s.topbarLeft}>
@@ -212,7 +249,9 @@ export default function CmsClient({ games, journalists }: Props) {
                   <div className={s.gameSelectWrap}>
                     {selGame ? (
                       <div className={s.selectedGame}>
-                        {selGame.cover_url && <img src={selGame.cover_url} alt={selGame.title} className={s.selectedGameImg} />}
+                        {selGame.cover_url && (
+                          <img src={selGame.cover_url} alt={selGame.title} className={s.selectedGameImg} />
+                        )}
                         <div className={s.selectedGameInfo}>
                           <div className={s.selectedGameTitle}>{selGame.title}</div>
                           <div className={s.selectedGameSub}>{selGame.developer} · {selGame.year}</div>
@@ -233,8 +272,14 @@ export default function CmsClient({ games, journalists }: Props) {
                         {gameDropOpen && filteredGames.length > 0 && (
                           <div className={s.gameDrop}>
                             {filteredGames.slice(0, 8).map((g) => (
-                              <div key={g.id} className={s.gameDropItem} onMouseDown={() => { setSelGame(g); setGameSearch(''); setGameDropOpen(false) }}>
-                                {g.cover_url && <img src={g.cover_url} alt={g.title} className={s.gameDropImg} />}
+                              <div
+                                key={g.id}
+                                className={s.gameDropItem}
+                                onMouseDown={() => { setSelGame(g); setGameSearch(''); setGameDropOpen(false) }}
+                              >
+                                {g.cover_url && (
+                                  <img src={g.cover_url} alt={g.title} className={s.gameDropImg} />
+                                )}
                                 <div>
                                   <div className={s.gameDropTitle}>{g.title}</div>
                                   <div className={s.gameDropSub}>{g.developer} · {g.year}</div>
@@ -260,14 +305,12 @@ export default function CmsClient({ games, journalists }: Props) {
                       placeholder="예) 92"
                     />
                     {score && (
-                      <div className={`${s.scorePreview} ${scoreCls(scoreNum)}`}>
-                        {scoreNum}
-                      </div>
+                      <div className={`${s.scorePreview} ${scoreCls(scoreNum, s)}`}>{scoreNum}</div>
                     )}
                   </div>
                   <div className={s.scoreQuickBtns}>
-                    {[100,95,90,85,80,75,70].map((n) => (
-                      <button key={n} className={`${s.scoreQuick} ${scoreCls(n)}`} onClick={() => setScore(String(n))}>
+                    {[100, 95, 90, 85, 80, 75, 70].map((n) => (
+                      <button key={n} className={`${s.scoreQuick} ${scoreCls(n, s)}`} onClick={() => setScore(String(n))}>
                         {n}
                       </button>
                     ))}
@@ -276,7 +319,9 @@ export default function CmsClient({ games, journalists }: Props) {
 
                 {/* 리뷰 텍스트 */}
                 <div className={s.formCard}>
-                  <div className={s.formCardTitle}>리뷰 본문 * <span className={s.charCount}>{reviewText.length}자</span></div>
+                  <div className={s.formCardTitle}>
+                    리뷰 본문 * <span className={s.charCount}>{reviewText.length}자</span>
+                  </div>
                   <textarea
                     className={s.reviewTextarea}
                     value={reviewText}
@@ -298,7 +343,7 @@ export default function CmsClient({ games, journalists }: Props) {
                   />
                 </div>
 
-                <button className={s.submitBtn} onClick={submitReview} disabled={submitting || !journalist}>
+                <button className={s.submitBtn} onClick={submitReview} disabled={submitting}>
                   {submitting ? '등록 중...' : '리뷰 게재하기'}
                 </button>
               </div>
@@ -309,16 +354,18 @@ export default function CmsClient({ games, journalists }: Props) {
                 <div className={s.previewCard}>
                   <div className={s.previewCardTop}>
                     <div className={s.previewInfo}>
-                      <span className={s.previewMedia}>{journalist?.media ?? '— 매체 —'}</span>
-                      <span className={s.previewReviewer}>{journalist?.name ?? '— 기자명 —'}</span>
+                      <span className={s.previewMedia}>{journalist.media}</span>
+                      <span className={s.previewReviewer}>{journalist.name}</span>
                     </div>
-                    <div className={`${s.previewScore} ${score ? scoreCls(scoreNum) : s.scoreTbd}`}>
+                    <div className={`${s.previewScore} ${score ? scoreCls(scoreNum, s) : s.scoreTbd}`}>
                       {score || '—'}
                     </div>
                   </div>
                   {selGame && (
                     <div className={s.previewGame}>
-                      {selGame.cover_url && <img src={selGame.cover_url} alt={selGame.title} className={s.previewGameImg} />}
+                      {selGame.cover_url && (
+                        <img src={selGame.cover_url} alt={selGame.title} className={s.previewGameImg} />
+                      )}
                       <div>
                         <div className={s.previewGameTitle}>{selGame.title}</div>
                         <div className={s.previewGameSub}>{selGame.developer}</div>
@@ -337,27 +384,113 @@ export default function CmsClient({ games, journalists }: Props) {
           {/* ── 내 리뷰 ── */}
           {tab === 'myReviews' && (
             <div>
-              {loadingReviews && <div className={s.loading}>로딩 중...</div>}
-              {!loadingReviews && myReviews.length === 0 && (
+              {myReviews.length === 0 && (
                 <div className={s.emptyS}>📝 작성한 리뷰가 없습니다</div>
               )}
               {myReviews.map((r) => {
                 const game = games.find((g) => g.id === r.game_id)
-                const n = r.score
-                const cls = n >= 90 ? s.csGreat : n >= 75 ? s.csGood : s.csBad
+                const isEditing = editingId === r.id
+                const cls = r.score >= 90 ? s.csGreat : r.score >= 75 ? s.csGood : s.csBad
+
                 return (
                   <div key={r.id} className={s.myReviewCard}>
-                    <div className={s.myRTop}>
-                      <div className={s.myRLeft}>
-                        {game?.cover_url && <img src={game.cover_url} alt={game.title} className={s.myRImg} />}
-                        <div>
-                          <div className={s.myRGame}>{game?.title ?? `게임 #${r.game_id}`}</div>
-                          <div className={s.myRMeta}>{r.media} · {r.published_at}</div>
+                    {isEditing ? (
+                      /* ── 인라인 수정 폼 ── */
+                      <div className={s.editForm}>
+                        <div className={s.editFormTop}>
+                          <div className={s.myRLeft}>
+                            {game?.cover_url && (
+                              <img src={game.cover_url} alt={game.title} className={s.myRImg} />
+                            )}
+                            <div>
+                              <div className={s.myRGame}>{game?.title ?? `게임 #${r.game_id}`}</div>
+                              <div className={s.myRMeta}>{r.media}</div>
+                            </div>
+                          </div>
+                          <button className={s.cancelEditBtn} onClick={cancelEdit}>취소</button>
                         </div>
+
+                        <div className={s.editRow}>
+                          <div className={s.editField}>
+                            <label className={s.editLabel}>점수 (0–100)</label>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                              <input
+                                type="number" min={0} max={100}
+                                className={`${s.formInput} ${s.scoreInput}`}
+                                value={editScore}
+                                onChange={(e) => setEditScore(e.target.value)}
+                              />
+                              {editScore && (
+                                <div className={`${s.scorePreview} ${scoreCls(Number(editScore), s)}`}>
+                                  {editScore}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className={s.editField}>
+                            <label className={s.editLabel}>게재 날짜</label>
+                            <input
+                              type="date" className={s.formInput}
+                              value={editDate} onChange={(e) => setEditDate(e.target.value)}
+                              style={{ maxWidth: 180 }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className={s.editField}>
+                          <label className={s.editLabel}>리뷰 본문 <span className={s.charCount}>{editText.length}자</span></label>
+                          <textarea
+                            className={s.reviewTextarea}
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            rows={6}
+                          />
+                        </div>
+
+                        <button
+                          className={s.saveEditBtn}
+                          onClick={() => saveEdit(r.id)}
+                          disabled={editSubmitting}
+                        >
+                          {editSubmitting ? '저장 중...' : '저장하기'}
+                        </button>
                       </div>
-                      <div className={`${s.myRScore} ${cls}`}>{r.score}</div>
-                    </div>
-                    <div className={s.myRText}>{r.review_text}</div>
+                    ) : (
+                      /* ── 일반 리뷰 카드 ── */
+                      <>
+                        <div className={s.myRTop}>
+                          <div className={s.myRLeft}>
+                            {game?.cover_url && (
+                              <img src={game.cover_url} alt={game.title} className={s.myRImg} />
+                            )}
+                            <div>
+                              <div className={s.myRGame}>{game?.title ?? `게임 #${r.game_id}`}</div>
+                              <div className={s.myRMeta}>{r.media} · {r.published_at}</div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <div className={`${s.myRScore} ${cls}`}>{r.score}</div>
+                            <div className={s.reviewActions}>
+                              <button
+                                className={s.editBtn}
+                                onClick={() => startEdit(r)}
+                                title="수정"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className={s.deleteBtn}
+                                onClick={() => deleteReview(r.id, game?.title ?? `게임 #${r.game_id}`)}
+                                title="삭제"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div className={s.myRText}>{r.review_text}</div>
+                      </>
+                    )}
                   </div>
                 )
               })}
@@ -365,7 +498,7 @@ export default function CmsClient({ games, journalists }: Props) {
           )}
 
           {/* ── 내 프로필 ── */}
-          {tab === 'profile' && journalist && (
+          {tab === 'profile' && (
             <div style={{ maxWidth: 480 }}>
               <div className={s.profileCard}>
                 <div className={s.profileAvatar}>{journalist.name[0]}</div>
@@ -373,13 +506,11 @@ export default function CmsClient({ games, journalists }: Props) {
                 <div className={s.profileMedia}>{journalist.media}</div>
                 <div className={s.profileStats}>
                   <div className={s.profileStat}>
-                    <div className={s.profileStatNum}>{journalist.review_count}</div>
+                    <div className={s.profileStatNum}>{reviewCount}</div>
                     <div className={s.profileStatLabel}>작성 리뷰</div>
                   </div>
                   <div className={s.profileStat}>
-                    <div className={`${s.profileStatNum} ${journalist.status === 'approved' ? s.approved : s.pending}`}>
-                      {journalist.status === 'approved' ? '승인됨' : '대기 중'}
-                    </div>
+                    <div className={`${s.profileStatNum} ${s.approved}`}>승인됨</div>
                     <div className={s.profileStatLabel}>계정 상태</div>
                   </div>
                 </div>
@@ -392,6 +523,9 @@ export default function CmsClient({ games, journalists }: Props) {
                   </div>
                 </div>
               </div>
+              <button className={s.profileLogoutBtn} onClick={handleLogout}>
+                로그아웃
+              </button>
             </div>
           )}
 
