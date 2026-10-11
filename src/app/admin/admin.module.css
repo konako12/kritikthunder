@@ -381,6 +381,84 @@
 /* ── EMPTY ── */
 .emptyS { text-align: center; padding: 2rem; color: var(--text-muted-light); font-size: 0.82rem; }
 
+/* ── IGDB 자동 입력 ── */
+.igdbSection {
+  background: var(--surface); border: 1.5px solid var(--blue-border);
+  border-radius: 10px; padding: 1.2rem 1.4rem; margin-bottom: 1.2rem;
+  background: linear-gradient(135deg, var(--blue-bg) 0%, var(--surface) 60%);
+}
+.igdbHeader {
+  display: flex; align-items: baseline; gap: 0.7rem; margin-bottom: 0.85rem; flex-wrap: wrap;
+}
+.igdbTitle {
+  font-size: 0.82rem; font-weight: 700; color: var(--blue);
+}
+.igdbSub {
+  font-size: 0.68rem; color: var(--text-muted-light);
+}
+.igdbRow {
+  display: flex; gap: 0.6rem;
+}
+.igdbRow input { flex: 1; }
+.igdbStatus {
+  font-size: 0.75rem; color: var(--text-muted-light); margin-top: 0.6rem; text-align: center;
+}
+.igdbResultGrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem; margin-top: 0.85rem;
+}
+.igdbCard {
+  display: flex; flex-direction: column; background: var(--surface);
+  border: 1.5px solid var(--border-light); border-radius: 8px; overflow: hidden;
+  cursor: pointer; transition: all 0.15s; text-align: left; padding: 0; font-family: inherit;
+}
+.igdbCard:hover {
+  border-color: var(--blue); box-shadow: 0 4px 14px rgba(37,99,235,0.12); transform: translateY(-2px);
+}
+.igdbCardImg {
+  width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block;
+}
+.igdbCardImgFallback {
+  width: 100%; aspect-ratio: 3/4; background: var(--bg-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; color: var(--text-muted-light);
+}
+.igdbCardBody {
+  padding: 0.55rem 0.65rem 0.65rem; flex: 1; display: flex; flex-direction: column; gap: 0.2rem;
+}
+.igdbCardTitle {
+  font-size: 0.75rem; font-weight: 700; line-height: 1.35; color: var(--text-dark);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.igdbCardMeta {
+  font-size: 0.62rem; color: var(--text-muted-light); font-family: 'DM Mono', monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.igdbCardTags {
+  display: flex; flex-wrap: wrap; gap: 2px; margin-top: 0.2rem;
+}
+.igdbTagGenre {
+  font-size: 0.55rem; font-weight: 700; letter-spacing: 0.05em;
+  background: var(--gold-bg); color: var(--gold-admin); border: 1px solid var(--gold-border);
+  padding: 1px 5px; border-radius: 3px;
+}
+.igdbTagPlat {
+  font-size: 0.55rem; font-weight: 600;
+  background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border);
+  padding: 1px 5px; border-radius: 3px;
+}
+.igdbTagMore {
+  font-size: 0.55rem; color: var(--text-muted-light);
+  background: var(--bg-light); padding: 1px 4px; border-radius: 3px;
+}
+
+/* ── 중복 경고 ── */
+.dupWarn {
+  background: var(--gold-bg); border: 1.5px solid var(--gold-border); border-radius: 7px;
+  padding: 0.7rem 1rem; font-size: 0.78rem; color: #7a5800;
+  margin-bottom: 1.2rem; line-height: 1.5;
+}
+
 @media (max-width: 1100px) {
   .jGrid { grid-template-columns: 1fr 1fr; }
   .featGrid { grid-template-columns: repeat(3, 1fr); }

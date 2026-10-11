@@ -9,6 +9,19 @@ import s from './admin.module.css'
 
 type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'journalists' | 'reports'
 
+interface IgdbResult {
+  igdb_id: number
+  title: string
+  year: number | null
+  cover_id: string | null
+  cover_thumb: string | null
+  platforms: string[]
+  genre: string | null
+  developer: string | null
+  publisher: string | null
+  summary: string | null
+}
+
 interface Props {
   initGames: Game[]
   initJournalists: Journalist[]
@@ -65,6 +78,14 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
   // 이미지 업로드 (add form)
   const [fFile, setFFile] = useState<File | null>(null)
   const [fPreview, setFPreview] = useState('')
+
+  // IGDB 자동 입력
+  const [igdbQuery, setIgdbQuery]     = useState('')
+  const [igdbResults, setIgdbResults] = useState<IgdbResult[]>([])
+  const [igdbLoading, setIgdbLoading] = useState(false)
+  const [igdbError, setIgdbError]     = useState('')
+  const [igdbCoverId, setIgdbCoverId] = useState<string | null>(null)
+  const [dupWarning, setDupWarning]   = useState<string | null>(null)
 
   // 편집 모달
   const [editGame, setEditGame] = useState<Game | null>(null)
@@ -142,6 +163,16 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
       if (fFile) {
         coverUrl = await uploadGameCover(fFile)
         if (!coverUrl) return
+      } else if (igdbCoverId && fImg) {
+        // IGDB 커버를 Supabase Storage에 업로드
+        const res = await fetch('/api/igdb/upload-cover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cover_id: igdbCoverId }),
+        })
+        const result = await res.json()
+        if (!res.ok) { showToast('커버 업로드 실패: ' + result.error); return }
+        coverUrl = result.url
       }
       const data = await apiCall('/api/games', 'POST', {
         title: fTitle.trim(), developer: fDev.trim(),
@@ -162,6 +193,47 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
     setFTitle(''); setFDev(''); setFPub(''); setFYear(''); setFGenre('')
     setFRating('전체이용가'); setFStatus('published'); setFImg(''); setFDesc('')
     setFPlats([]); setFErrors({}); setFFile(null); setFPreview('')
+    setIgdbCoverId(null); setIgdbQuery(''); setIgdbResults([]); setIgdbError(''); setDupWarning(null)
+  }
+
+  async function searchIgdb() {
+    if (!igdbQuery.trim()) return
+    setIgdbLoading(true)
+    setIgdbError('')
+    setIgdbResults([])
+    try {
+      const res = await fetch(`/api/igdb/search?q=${encodeURIComponent(igdbQuery.trim())}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'IGDB 검색 오류')
+      setIgdbResults(data.results)
+      if (!data.results.length) setIgdbError('검색 결과가 없습니다')
+    } catch (e: unknown) {
+      setIgdbError((e as Error).message)
+    } finally {
+      setIgdbLoading(false)
+    }
+  }
+
+  function applyIgdbResult(r: IgdbResult) {
+    setFTitle(r.title)
+    if (r.developer) setFDev(r.developer)
+    if (r.publisher) setFPub(r.publisher)
+    if (r.year) setFYear(String(r.year))
+    if (r.genre && GENRES.includes(r.genre)) setFGenre(r.genre)
+    if (r.platforms.length) setFPlats(r.platforms)
+    if (r.summary) setFDesc(r.summary)
+    if (r.cover_id) {
+      setFImg(`https://images.igdb.com/igdb/image/upload/t_cover_big/${r.cover_id}.jpg`)
+      setFFile(null)
+      setFPreview('')
+      setIgdbCoverId(r.cover_id)
+    }
+    setIgdbResults([])
+    setIgdbQuery('')
+    setIgdbError('')
+    const dup = games.find((g) => g.title.toLowerCase() === r.title.toLowerCase())
+    setDupWarning(dup ? r.title : null)
+    showToast(`✅ "${r.title}" 정보가 자동으로 입력됐어요`)
   }
 
   async function deleteGame(id: number, title: string) {
@@ -454,9 +526,72 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
           {/* ── 게임 등록 ── */}
           {page === 'add' && (
             <div style={{ maxWidth: 620 }}>
+
+              {/* IGDB 자동 입력 */}
+              <div className={s.igdbSection}>
+                <div className={s.igdbHeader}>
+                  <span className={s.igdbTitle}>IGDB에서 게임 정보 자동 불러오기</span>
+                  <span className={s.igdbSub}>제목을 검색해서 정보를 자동으로 채울 수 있어요</span>
+                </div>
+                <div className={s.igdbRow}>
+                  <input
+                    className={s.formInput}
+                    placeholder="게임 제목 검색 (영문 권장)..."
+                    value={igdbQuery}
+                    onChange={(e) => setIgdbQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && searchIgdb()}
+                  />
+                  <button
+                    className={`${s.btn} ${s.btnPrimary}`}
+                    onClick={searchIgdb}
+                    disabled={igdbLoading}
+                  >
+                    {igdbLoading ? '검색 중...' : '검색'}
+                  </button>
+                </div>
+
+                {igdbError && (
+                  <div className={s.igdbStatus}>{igdbError}</div>
+                )}
+
+                {igdbResults.length > 0 && (
+                  <div className={s.igdbResultGrid}>
+                    {igdbResults.map((r) => (
+                      <button key={r.igdb_id} className={s.igdbCard} onClick={() => applyIgdbResult(r)}>
+                        {r.cover_thumb ? (
+                          <img src={r.cover_thumb} alt={r.title} className={s.igdbCardImg} />
+                        ) : (
+                          <div className={s.igdbCardImgFallback}>{r.title[0]}</div>
+                        )}
+                        <div className={s.igdbCardBody}>
+                          <div className={s.igdbCardTitle}>{r.title}</div>
+                          <div className={s.igdbCardMeta}>
+                            {[r.developer, r.year].filter(Boolean).join(' · ')}
+                          </div>
+                          <div className={s.igdbCardTags}>
+                            {r.genre && <span className={s.igdbTagGenre}>{r.genre}</span>}
+                            {r.platforms.slice(0, 3).map((p) => (
+                              <span key={p} className={s.igdbTagPlat}>{p}</span>
+                            ))}
+                            {r.platforms.length > 3 && (
+                              <span className={s.igdbTagMore}>+{r.platforms.length - 3}</span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className={s.card}>
                 <div className={s.cardHead}><span className={s.cardTitle}>새 게임 등록</span></div>
                 <div className={s.cardBody}>
+                  {dupWarning && (
+                    <div className={s.dupWarn}>
+                      ⚠️ &nbsp;<strong>"{dupWarning}"</strong> 게임이 이미 등록돼 있습니다. 중복 확인 후 진행해주세요.
+                    </div>
+                  )}
                   <div className={s.formSectionTitle}>기본 정보</div>
                   <div className={s.formGrid}>
                     <div className={s.formGroup}>
@@ -524,17 +659,17 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
                     {(fPreview || fImg) && (
                       <div className={s.imgPreviewWrap}>
                         <img className={s.imgPreview} src={fPreview || fImg} alt="미리보기" />
-                        <button className={s.imgRemove} onClick={() => { setFFile(null); setFPreview(''); setFImg('') }}>제거</button>
+                        <button className={s.imgRemove} onClick={() => { setFFile(null); setFPreview(''); setFImg(''); setIgdbCoverId(null) }}>제거</button>
                       </div>
                     )}
                     <label className={s.uploadBtn}>
                       파일 업로드
                       <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) { handleFileSelect(f, setFFile, setFPreview); setFImg('') } }} />
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) { handleFileSelect(f, setFFile, setFPreview); setFImg(''); setIgdbCoverId(null) } }} />
                     </label>
                     <div className={s.uploadHint}>JPG, PNG, WebP · 최대 5MB</div>
                     <div className={s.uploadOr}>또는 URL 직접 입력</div>
-                    <input className={s.formInput} value={fImg} onChange={(e) => { setFImg(e.target.value); setFFile(null); setFPreview('') }} placeholder="https://..." disabled={!!fFile} />
+                    <input className={s.formInput} value={fImg} onChange={(e) => { setFImg(e.target.value); setFFile(null); setFPreview(''); setIgdbCoverId(null) }} placeholder="https://..." disabled={!!fFile} />
                   </div>
                   <div className={s.formGroup}>
                     <label className={s.formLabel}>게임 소개</label>
