@@ -80,12 +80,13 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
   const [fPreview, setFPreview] = useState('')
 
   // IGDB 자동 입력
-  const [igdbQuery, setIgdbQuery]     = useState('')
-  const [igdbResults, setIgdbResults] = useState<IgdbResult[]>([])
-  const [igdbLoading, setIgdbLoading] = useState(false)
-  const [igdbError, setIgdbError]     = useState('')
-  const [igdbCoverId, setIgdbCoverId] = useState<string | null>(null)
-  const [dupWarning, setDupWarning]   = useState<string | null>(null)
+  const [igdbQuery, setIgdbQuery]       = useState('')
+  const [igdbResults, setIgdbResults]   = useState<IgdbResult[]>([])
+  const [igdbLoading, setIgdbLoading]   = useState(false)
+  const [igdbError, setIgdbError]       = useState('')
+  const [igdbIsApiError, setIgdbIsApiError] = useState(false)
+  const [igdbCoverId, setIgdbCoverId]   = useState<string | null>(null)
+  const [dupWarning, setDupWarning]     = useState<string | null>(null)
 
   // 편집 모달
   const [editGame, setEditGame] = useState<Game | null>(null)
@@ -193,21 +194,27 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
     setFTitle(''); setFDev(''); setFPub(''); setFYear(''); setFGenre('')
     setFRating('전체이용가'); setFStatus('published'); setFImg(''); setFDesc('')
     setFPlats([]); setFErrors({}); setFFile(null); setFPreview('')
-    setIgdbCoverId(null); setIgdbQuery(''); setIgdbResults([]); setIgdbError(''); setDupWarning(null)
+    setIgdbCoverId(null); setIgdbQuery(''); setIgdbResults([]); setIgdbError(''); setIgdbIsApiError(false); setDupWarning(null)
   }
 
   async function searchIgdb() {
     if (!igdbQuery.trim()) return
     setIgdbLoading(true)
     setIgdbError('')
+    setIgdbIsApiError(false)
     setIgdbResults([])
+    let isApiErr = false
     try {
       const res = await fetch(`/api/igdb/search?q=${encodeURIComponent(igdbQuery.trim())}`)
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'IGDB 검색 오류')
+      if (!res.ok) {
+        isApiErr = true
+        throw new Error(data.error ?? 'IGDB 검색 오류')
+      }
       setIgdbResults(data.results)
       if (!data.results.length) setIgdbError('검색 결과가 없습니다')
     } catch (e: unknown) {
+      setIgdbIsApiError(isApiErr)
       setIgdbError((e as Error).message)
     } finally {
       setIgdbLoading(false)
@@ -551,7 +558,9 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
                 </div>
 
                 {igdbError && (
-                  <div className={s.igdbStatus}>{igdbError}</div>
+                  <div className={igdbIsApiError ? s.igdbStatusError : s.igdbStatus}>
+                    {igdbIsApiError ? `⚠️ ${igdbError}` : igdbError}
+                  </div>
                 )}
 
                 {igdbResults.length > 0 && (

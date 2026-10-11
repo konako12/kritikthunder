@@ -13,8 +13,13 @@ async function getTwitchToken(): Promise<string> {
     `&grant_type=client_credentials`,
     { method: 'POST' },
   )
-  if (!res.ok) throw new Error('Twitch 토큰 발급 실패')
+  if (!res.ok) {
+    const text = await res.text()
+    console.error('[IGDB] Twitch 토큰 발급 실패:', res.status, text)
+    throw new Error(`Twitch 토큰 발급 실패 (${res.status}): ${text}`)
+  }
   const json = await res.json()
+  console.log('[IGDB] Twitch 토큰 발급 성공, 만료까지:', Math.floor(json.expires_in / 3600), '시간')
   tokenCache = {
     token: json.access_token,
     expiresAt: Date.now() + json.expires_in * 1000 - 60_000,
@@ -86,13 +91,19 @@ export async function GET(req: NextRequest) {
   try {
     const token = await getTwitchToken()
 
+    // game_type 값 (구 category):
+    //   null | 0 = 메인게임, 8 = 리메이크, 9 = 리마스터, 10 = 확장판, 11 = 포트
+    // ※ 구 API의 `category` 필드는 `game_type`으로 이름이 변경됨
+    //   `category`를 그대로 쓰면 IGDB가 빈 배열 []을 반환하므로 반드시 game_type 사용
     const body =
       `search "${q.replace(/"/g, '')}";` +
       `fields name, cover.image_id, first_release_date, platforms.id, genres.id,` +
       ` involved_companies.company.name, involved_companies.developer, involved_companies.publisher,` +
       ` summary;` +
-      ` where version_parent = null & (category = 0 | category = 8 | category = 9);` +
+      ` where game_type = null | game_type = (0,8,9,10,11);` +
       ` limit 8;`
+
+    console.log('[IGDB] 쿼리:', body)
 
     const res = await fetch('https://api.igdb.com/v4/games', {
       method: 'POST',
@@ -103,12 +114,35 @@ export async function GET(req: NextRequest) {
       },
       body,
     })
-    if (!res.ok) throw new Error(`IGDB 응답 오류: ${res.status}`)
+
+    const rawText = await res.text()
+    console.log('[IGDB] 응답 상태:', res.status, '/ 본문 앞 200자:', rawText.slice(0, 200))
+
+    if (!res.ok) {
+      throw new Error(`IGDB HTTP ${res.status}: ${rawText.slice(0, 300)}`)
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const games: any[] = await res.json()
+    let data: any[]
+    try {
+      data = JSON.parse(rawText)
+    } catch {
+      throw new Error(`IGDB 응답 파싱 실패: ${rawText.slice(0, 200)}`)
+    }
 
-    const results = games.map((g) => {
+    // IGDB는 에러를 200 + [{ title, status, cause }] 형태로 내려주기도 함
+    if (!Array.isArray(data)) {
+      throw new Error(`IGDB 예상치 못한 응답 형식: ${rawText.slice(0, 200)}`)
+    }
+    if (data.length > 0 && typeof data[0]?.title === 'string' && typeof data[0]?.status === 'number') {
+      const igdbErr = data[0]
+      console.error('[IGDB] API 오류 응답:', igdbErr)
+      throw new Error(`IGDB 오류 (${igdbErr.status}): ${igdbErr.title} — ${igdbErr.cause ?? ''}`)
+    }
+
+    console.log('[IGDB] 검색 결과:', data.length, '건')
+
+    const results = data.map((g) => {
       const year = g.first_release_date
         ? new Date(g.first_release_date * 1000).getFullYear()
         : null
@@ -120,8 +154,8 @@ export async function GET(req: NextRequest) {
 
       const genre = mapGenres(g.genres ?? [])
 
-      const devs  = (g.involved_companies ?? []).filter((ic: { developer: boolean }) => ic.developer)
-      const pubs  = (g.involved_companies ?? []).filter((ic: { publisher: boolean }) => ic.publisher)
+      const devs = (g.involved_companies ?? []).filter((ic: { developer: boolean }) => ic.developer)
+      const pubs = (g.involved_companies ?? []).filter((ic: { publisher: boolean }) => ic.publisher)
 
       return {
         igdb_id:     g.id,
@@ -141,6 +175,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ results })
   } catch (e: unknown) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+    const msg = (e as Error).message
+    console.error('[IGDB] 검색 실패:', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
