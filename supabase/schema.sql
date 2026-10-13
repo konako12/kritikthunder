@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS critic_reviews (
   score         INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),
   review_text   TEXT NOT NULL,
   source_url    TEXT CHECK (source_url IS NULL OR source_url ~* '^https?://[^\s]+$'),
+  score_display TEXT CHECK (score_display IS NULL OR char_length(score_display) BETWEEN 1 AND 12),
   published_at  DATE NOT NULL DEFAULT CURRENT_DATE,
   created_at    TIMESTAMPTZ DEFAULT NOW()
 );

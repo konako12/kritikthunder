@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { CriticReview, Game } from '@/lib/types'
-import { isValidSourceUrl, sourceDomain } from '@/lib/utils'
+import { isValidSourceUrl, sourceDomain, SCORE_DISPLAY_MAX } from '@/lib/utils'
 import s from './admin.module.css'
 
 interface Props {
@@ -37,6 +37,7 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
   const [media, setMedia]       = useState('')
   const [reviewer, setReviewer] = useState('')
   const [score, setScore]       = useState('')
+  const [scoreDisplay, setScoreDisplay] = useState('')
   const [summary, setSummary]   = useState('')
   const [url, setUrl]           = useState('')
   const [date, setDate]         = useState(today())
@@ -51,7 +52,7 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
   const gameTitle = (id: number) => games.find((g) => g.id === id)?.title ?? `게임 #${id}`
 
   function resetForm() {
-    setGameId(''); setMedia(''); setReviewer(''); setScore('')
+    setGameId(''); setMedia(''); setReviewer(''); setScore(''); setScoreDisplay('')
     setSummary(''); setUrl(''); setDate(today()); setErrors({})
   }
 
@@ -71,7 +72,7 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
     setSaving(true)
     try {
       const data = await request('/api/admin/critic-reviews', 'POST', {
-        game_id: Number(gameId), media, reviewer_name: reviewer, score: n,
+        game_id: Number(gameId), media, reviewer_name: reviewer, score: n, score_display: scoreDisplay,
         review_text: summary, source_url: url, published_at: date,
       })
       setReviews([data, ...reviews])
@@ -137,6 +138,13 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
               {errors.score && <span className={s.formError}>{errors.score}</span>}
             </div>
             <div className={s.formGroup}>
+              <label className={s.formLabel}>원래 점수 표기</label>
+              <input className={s.formInput} value={scoreDisplay} maxLength={SCORE_DISPLAY_MAX}
+                onChange={(e) => setScoreDisplay(e.target.value)} placeholder={`예) 9.5/10 · 비우면 ${score || '96'}/100`} />
+            </div>
+          </div>
+          <div className={s.formGrid}>
+            <div className={s.formGroup}>
               <label className={s.formLabel}>게재일 <span className={s.req}>*</span></label>
               <input className={s.formInput} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               {errors.date && <span className={s.formError}>{errors.date}</span>}
@@ -183,7 +191,7 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
                   <div className={s.gameName}>{r.media}</div>
                   <div className={s.gameDev}>{r.reviewer_name}</div>
                 </td>
-                <td><span className={`${s.chip} ${scoreChipClass(r.score)}`}>{r.score}</span></td>
+                <td><span className={`${s.chip} ${scoreChipClass(r.score)}`}>{r.score}</span>{r.score_display && <span className={s.gameDev} style={{ marginLeft: 6 }}>{r.score_display}</span>}</td>
                 <td><span style={{ fontFamily: "'DM Mono',monospace", fontSize: '0.78rem' }}>{r.published_at}</span></td>
                 <td style={{ minWidth: 260 }}>
                   {editId === r.id ? (

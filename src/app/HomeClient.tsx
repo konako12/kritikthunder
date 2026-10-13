@@ -6,11 +6,13 @@ import type { Game, CriticReview } from '@/lib/types'
 import { scoreClass, sourceDomain } from '@/lib/utils'
 import type { Collection } from '@/lib/curation'
 import CollectionCard from './collections/CollectionCard'
+import HeroAccolades from './HeroAccolades'
 import cs from './collections/collections.module.css'
 import s from './page.module.css'
 
 interface Props {
   featured: Game | undefined
+  heroReviews: CriticReview[]
   top5: Game[]
   recent: Game[]
   reviews: CriticReview[]
@@ -19,7 +21,7 @@ interface Props {
   collections: Collection[]
 }
 
-export default function HomeClient({ featured, top5, recent, reviews, upcoming, allGames, collections }: Props) {
+export default function HomeClient({ featured, heroReviews, top5, recent, reviews, upcoming, allGames, collections }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [searchQ, setSearchQ] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -111,7 +113,7 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
           )}
           <div className={s.heroVignette} />
           {/* 콘텐츠만 1280px 제한 */}
-          <div className={s.heroOuter}>
+          <div className={`${s.heroOuter} ${s.heroLayout}`}>
             <div className={s.heroBody}>
               <div className={s.heroBadge}>▶ &nbsp;이번 주 에디터 픽</div>
               <h1 className={s.heroTitle}>{featured.title}</h1>
@@ -138,6 +140,9 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
                 <button className={s.btnGhost}>+ 위시리스트</button>
               </div>
             </div>
+            {featured.critic_score !== null && (
+              <HeroAccolades total={featured.critic_score} reviews={heroReviews} />
+            )}
           </div>
           <div className={s.heroScroll}>
             <span>스크롤</span>

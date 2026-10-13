@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Journalist } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
-import { isValidSourceUrl, normalizeSourceUrl, sourceDomain } from '@/lib/utils'
+import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, sourceDomain, SCORE_DISPLAY_MAX } from '@/lib/utils'
 import s from './cms.module.css'
 
 interface GameBasic {
@@ -24,6 +24,7 @@ interface CriticReviewRow {
   score: number
   review_text: string
   source_url: string | null
+  score_display: string | null
   published_at: string
 }
 
@@ -56,6 +57,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   const [score, setScore] = useState('')
   const [reviewText, setReviewText] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
+  const [scoreDisplay, setScoreDisplay] = useState('')
   const [publishDate, setPublishDate] = useState(new Date().toISOString().slice(0, 10))
   const [submitting, setSubmitting] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
@@ -67,6 +69,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   const [editText, setEditText] = useState('')
   const [editDate, setEditDate] = useState('')
   const [editSourceUrl, setEditSourceUrl] = useState('')
+  const [editScoreDisplay, setEditScoreDisplay] = useState('')
   const [editSubmitting, setEditSubmitting] = useState(false)
 
   const scoreNum = Number(score)
@@ -102,6 +105,8 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
         score: scoreNum,
         review_text: reviewText.trim(),
         source_url: normalizeSourceUrl(sourceUrl),
+        // 원래 점수 표기는 입력했을 때만 전송
+        ...(normalizeScoreDisplay(scoreDisplay) && { score_display: normalizeScoreDisplay(scoreDisplay) }),
         published_at: publishDate,
       })
       .select()
@@ -119,6 +124,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
     setScore('')
     setReviewText('')
     setSourceUrl('')
+    setScoreDisplay('')
     setPublishDate(new Date().toISOString().slice(0, 10))
     setTimeout(() => setSuccessMsg(''), 4000)
   }
@@ -130,6 +136,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
     setEditText(r.review_text)
     setEditDate(r.published_at)
     setEditSourceUrl(r.source_url ?? '')
+    setEditScoreDisplay(r.score_display ?? '')
   }
 
   // ── 수정 저장
@@ -148,6 +155,8 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
         review_text: editText.trim(),
         published_at: editDate,
         source_url: normalizeSourceUrl(editSourceUrl),
+        ...((normalizeScoreDisplay(editScoreDisplay) || myReviews.find((x) => x.id === reviewId)?.score_display)
+          && { score_display: normalizeScoreDisplay(editScoreDisplay) }),
       })
       .eq('id', reviewId)
       .select()
@@ -329,6 +338,17 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                       </button>
                     ))}
                   </div>
+                  <div className={s.formCardTitle} style={{ marginTop: '1rem' }}>
+                    원래 점수 표기 <span className={s.charCount}>선택 · 비우면 &quot;{score || '96'}/100&quot;으로 표시</span>
+                  </div>
+                  <input
+                    className={s.formInput}
+                    value={scoreDisplay}
+                    maxLength={SCORE_DISPLAY_MAX}
+                    onChange={(e) => setScoreDisplay(e.target.value)}
+                    placeholder="예) 9.5/10, 5/5, A-"
+                    style={{ maxWidth: 200 }}
+                  />
                 </div>
 
                 {/* 리뷰 텍스트 */}
@@ -464,6 +484,15 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                               type="date" className={s.formInput}
                               value={editDate} onChange={(e) => setEditDate(e.target.value)}
                               style={{ maxWidth: 180 }}
+                            />
+                          </div>
+                          <div className={s.editField}>
+                            <label className={s.editLabel}>원래 점수 표기 (선택)</label>
+                            <input
+                              className={s.formInput} maxLength={SCORE_DISPLAY_MAX}
+                              value={editScoreDisplay} onChange={(e) => setEditScoreDisplay(e.target.value)}
+                              placeholder={`비우면 ${editScore || '96'}/100`}
+                              style={{ maxWidth: 160 }}
                             />
                           </div>
                         </div>

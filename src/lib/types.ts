@@ -23,6 +23,7 @@ export interface CriticReview {
   score: number
   review_text: string
   source_url: string | null
+  score_display: string | null
   published_at: string
   created_at: string
 }

@@ -1,4 +1,4 @@
-import { isValidSourceUrl, normalizeSourceUrl } from '@/lib/utils'
+import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, SCORE_DISPLAY_MAX } from '@/lib/utils'
 
 /** 관리자가 쓸 수 있는 critic_reviews 필드만 골라 검증 */
 export function pickReviewFields(body: Record<string, unknown>, { partial }: { partial: boolean }) {
@@ -31,6 +31,11 @@ export function pickReviewFields(body: Record<string, unknown>, { partial }: { p
     const url = String(body.source_url ?? '')
     if (!isValidSourceUrl(url)) return { error: '원문 링크는 http:// 또는 https://로 시작해야 해요' }
     out.source_url = normalizeSourceUrl(url)
+  }
+  if (!partial || has('score_display')) {
+    const v = normalizeScoreDisplay(String(body.score_display ?? ''))
+    if (v && v.length > SCORE_DISPLAY_MAX) return { error: `원래 점수 표기는 ${SCORE_DISPLAY_MAX}자 이내로 입력해주세요` }
+    if (v !== null || partial) out.score_display = v // 새 등록 시 빈 값은 보내지 않음
   }
   return { fields: out }
 }

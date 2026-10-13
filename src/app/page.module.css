@@ -125,6 +125,10 @@
 .heroBody {
   padding-bottom: 5rem; max-width: 520px;
 }
+/* 왼쪽 게임 정보 + 오른쪽 평론가 점수 */
+.heroLayout {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 3rem;
+}
 .heroBadge {
   display: inline-flex; align-items: center; gap: 0.5rem;
   background: var(--gold-dim); border: 1px solid rgba(245,200,66,0.3);
@@ -407,7 +411,8 @@
   .wrap { padding: 0 1.2rem; }
   .navInner { padding: 0 1.2rem; }
   .heroOuter { padding: 0 1.2rem; }
-  .heroBody { padding-bottom: 4rem; }
+  .heroLayout { flex-direction: column; align-items: stretch; gap: 1.6rem; }
+  .heroBody { padding-bottom: 0; max-width: 100%; min-width: 0; }
   .heroTitle { font-size: 2.6rem; }
   .hscroll { padding-left: 1.2rem; }
   .navLinks a:not(.loginBtn) { display: none; }

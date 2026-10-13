@@ -32,6 +32,18 @@ export default async function HomePage() {
   const top5      = [...published].sort((a, b) => (b.critic_score ?? 0) - (a.critic_score ?? 0)).slice(0, 5)
   const featured  = games.find((g) => g.id === featuredId) ?? published[0]
 
+  // 히어로 어콜레이드 — 에디터 픽 게임의 최신 전문가 리뷰 6개
+  const heroReviewsRes = featured
+    ? await supabase
+        .from('critic_reviews')
+        .select('*')
+        .eq('game_id', featured.id)
+        .order('published_at', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(6)
+    : null
+  const heroReviews: CriticReview[] = heroReviewsRes?.data ?? []
+
   // 추천 컬렉션 — 고정 우선, 최근 기간 순 4개 (카드에는 상위 3개만 필요)
   const collections = featuredCollections(buildCollections(stats.games, stats.settings), stats.settings)
     .map((c) => ({ ...c, games: c.games.slice(0, 3) }))
@@ -39,6 +51,7 @@ export default async function HomePage() {
   return (
     <HomeClient
       featured={featured}
+      heroReviews={heroReviews}
       top5={top5}
       recent={published}
       reviews={reviews}

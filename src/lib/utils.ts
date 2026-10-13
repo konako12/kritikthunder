@@ -40,3 +40,17 @@ export function normalizeSourceUrl(url: string | null | undefined): string | nul
 export function sourceDomain(url: string): string {
   try { return new URL(url).hostname.replace(/^www\./, '') } catch { return '' }
 }
+
+/** 원래 점수 표기 최대 길이 (예: "9.5/10", "A-") */
+export const SCORE_DISPLAY_MAX = 12
+
+/** 원래 점수 표기 입력값 → DB 저장값 (빈 문자열은 null) */
+export function normalizeScoreDisplay(v: string | null | undefined): string | null {
+  const t = (v ?? '').trim()
+  return t ? t : null
+}
+
+/** 화면 표시용 점수 — 원래 표기가 없으면 "96/100" */
+export function scoreLabel(r: { score: number; score_display?: string | null }): string {
+  return r.score_display?.trim() || `${r.score}/100`
+}
