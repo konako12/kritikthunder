@@ -66,7 +66,6 @@ export default function GamesClient({ games }: Props) {
         <nav>
           <Link href="/games" className={s.navActive}>게임</Link>
           <Link href="/ranking">랭킹</Link>
-          <Link href="/admin">관리자</Link>
         </nav>
       </header>
 
@@ -219,7 +218,14 @@ export default function GamesClient({ games }: Props) {
           <div className={s.ftLogo}>KRIT<span>IK</span></div>
           <div className={s.ftSub}>국내 게임 전문 평점 서비스</div>
         </div>
-        <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
+        <div>
+          <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
+          <div className={s.pressLinks}>
+            <Link href="/login">기자 로그인</Link>
+            {' · '}
+            <Link href="/register">기자 가입 신청</Link>
+          </div>
+        </div>
       </footer>
     </div>
   )

@@ -83,7 +83,6 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
           <Link href="/games">게임</Link>
           <Link href="/reviews">리뷰</Link>
           <Link href="/ranking">랭킹</Link>
-          <Link href="/admin">관리자</Link>
         </nav>
       </header>
 

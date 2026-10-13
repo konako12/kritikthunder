@@ -38,7 +38,6 @@ export default function RankingClient({ games }: Props) {
         <nav>
           <Link href="/games">게임</Link>
           <Link href="/ranking" className={s.navActive}>랭킹</Link>
-          <Link href="/admin">관리자</Link>
         </nav>
       </header>
 
@@ -162,7 +161,14 @@ export default function RankingClient({ games }: Props) {
           <div className={s.ftLogo}>KRIT<span>IK</span></div>
           <div className={s.ftSub}>국내 게임 전문 평점 서비스</div>
         </div>
-        <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
+        <div>
+          <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
+          <div className={s.pressLinks}>
+            <Link href="/login">기자 로그인</Link>
+            {' · '}
+            <Link href="/register">기자 가입 신청</Link>
+          </div>
+        </div>
       </footer>
     </div>
   )

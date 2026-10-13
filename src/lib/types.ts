@@ -40,7 +40,9 @@ export interface Journalist {
   media: string
   email: string
   review_count: number
-  status: 'pending' | 'approved'
+  status: 'pending' | 'approved' | 'rejected'
+  article_links: string[]
+  bio: string | null
   joined_at: string
   created_at: string
 }

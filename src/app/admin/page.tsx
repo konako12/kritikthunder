@@ -9,6 +9,14 @@ export default async function AdminPage() {
   const { data: { user } } = await authSupabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // 관리자 이메일 검증 (서버 전용 환경변수)
+  const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean)
+
+  if (!adminEmails.includes(user.email!)) redirect('/login')
+
   const supabase = createAdminClient()
 
   const [gamesRes, journalistsRes, reportsRes, settingsRes] = await Promise.all([

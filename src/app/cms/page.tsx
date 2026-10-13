@@ -11,16 +11,17 @@ export default async function CmsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // ── 2. 승인된 기자 확인 (이메일 기반 연동)
+  // ── 2. 기자 상태 확인 (이메일 기반)
   const { data: journalist } = await supabase
     .from('journalists')
     .select('*')
     .eq('email', user.email!)
-    .eq('status', 'approved')
     .maybeSingle()
 
-  // 기자가 아니면 관리자 페이지로
-  if (!journalist) redirect('/admin')
+  if (!journalist) redirect('/login')
+  if (journalist.status === 'pending')  redirect('/pending')
+  if (journalist.status === 'rejected') redirect('/rejected')
+  if (journalist.status !== 'approved') redirect('/login')
 
   // ── 3. 이 기자의 리뷰 목록 (서버에서 미리 로드)
   const [gamesRes, reviewsRes] = await Promise.all([

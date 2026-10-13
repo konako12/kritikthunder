@@ -124,12 +124,12 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
   }
 
   async function uploadGameCover(file: File): Promise<string | null> {
-    const supabase = createClient()
-    const ext = file.name.split('.').pop()
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage.from('game-covers').upload(filename, file)
-    if (error) { showToast('이미지 업로드 실패: ' + error.message); return null }
-    return supabase.storage.from('game-covers').getPublicUrl(filename).data.publicUrl
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/admin/upload-cover-file', { method: 'POST', body: formData })
+    const data = await res.json()
+    if (!res.ok) { showToast('이미지 업로드 실패: ' + (data.error ?? '알 수 없는 오류')); return null }
+    return data.url
   }
 
   function handleFileSelect(
@@ -279,6 +279,17 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
     await apiCall(`/api/admin/journalists/${id}`, 'PATCH', { status: 'approved' })
     setJournalists(journalists.map((j) => j.id === id ? { ...j, status: 'approved' } : j))
     showToast('✅ 기자가 승인됐어요')
+  }
+  async function rejectJournalist(id: number, name: string) {
+    setConfirm({
+      title: '가입을 거절할까요?',
+      desc: `${name} 기자의 신청을 거절합니다.`,
+      onOk: async () => {
+        await apiCall(`/api/admin/journalists/${id}`, 'PATCH', { status: 'rejected' })
+        setJournalists(journalists.map((j) => j.id === id ? { ...j, status: 'rejected' } : j))
+        showToast(`✗ "${name}" 신청이 거절됐어요`)
+      },
+    })
   }
   async function removeJournalist(id: number, name: string) {
     setConfirm({
@@ -448,11 +459,14 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
                         <div key={j.id} className={s.pendingRow}>
                           <div className={s.pendingInfo}>
                             <div className={s.jAvatar}>{j.name[0]}</div>
-                            <div><div className={s.jName}>{j.name}</div><div className={s.jMedia}>{j.media}</div></div>
+                            <div>
+                              <div className={s.jName}>{j.name}</div>
+                              <div className={s.jMedia}>{j.media}</div>
+                            </div>
                           </div>
                           <div className={s.pendingBtns}>
                             <button className={`${s.btn} ${s.btnSuccess} ${s.btnSm}`} onClick={() => approveJournalist(j.id)}>승인</button>
-                            <button className={`${s.btn} ${s.btnDanger} ${s.btnSm}`} onClick={() => removeJournalist(j.id, j.name)}>거절</button>
+                            <button className={`${s.btn} ${s.btnDanger} ${s.btnSm}`} onClick={() => rejectJournalist(j.id, j.name)}>거절</button>
                           </div>
                         </div>
                       ))}
@@ -753,10 +767,29 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
                     <div className={s.jRows}>
                       <div className={s.jRow}><span className={s.jKey}>이메일</span><span>{j.email}</span></div>
                       <div className={s.jRow}><span className={s.jKey}>신청일</span><span>{j.joined_at}</span></div>
+                      {j.bio && (
+                        <div className={s.jRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                          <span className={s.jKey}>자기소개</span>
+                          <span style={{ fontSize: '0.78rem', color: 'var(--text-light)', lineHeight: 1.5 }}>{j.bio}</span>
+                        </div>
+                      )}
+                      {j.article_links && j.article_links.length > 0 && (
+                        <div className={s.jRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+                          <span className={s.jKey}>기사 링크</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {j.article_links.map((link, i) => (
+                              <a key={i} href={link} target="_blank" rel="noopener noreferrer"
+                                style={{ fontSize: '0.75rem', color: '#2563eb', wordBreak: 'break-all' }}>
+                                {link}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className={s.jBtns}>
                       <button className={`${s.btn} ${s.btnSuccess} ${s.btnSm}`} style={{ flex: 1 }} onClick={() => approveJournalist(j.id)}>✓ 승인</button>
-                      <button className={`${s.btn} ${s.btnDanger} ${s.btnSm}`} style={{ flex: 1 }} onClick={() => removeJournalist(j.id, j.name)}>✕ 거절</button>
+                      <button className={`${s.btn} ${s.btnDanger} ${s.btnSm}`} style={{ flex: 1 }} onClick={() => rejectJournalist(j.id, j.name)}>✕ 거절</button>
                     </div>
                   </div>
                 ))}

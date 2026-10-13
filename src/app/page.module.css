@@ -378,6 +378,17 @@
 .ftLogo span { color: var(--text-muted); }
 .ftTagline { font-size: 0.67rem; color: var(--text-muted); margin-top: 0.25rem; }
 .ftText { font-size: 0.67rem; color: var(--text-muted); line-height: 1.7; text-align: right; }
+.pressLinks {
+  margin-top: 0.5rem;
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.25);
+  text-align: right;
+}
+.pressLinks a {
+  color: rgba(255,255,255,0.35);
+  text-decoration: none;
+}
+.pressLinks a:hover { color: var(--text-muted); }
 
 /* ══════════════════════════════════════════
    RESPONSIVE

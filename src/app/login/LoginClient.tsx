@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import s from './login.module.css'
@@ -26,15 +27,25 @@ export default function LoginClient() {
       return
     }
 
-    // 승인된 기자이면 /cms, 그 외(관리자 등)는 /admin
-    const { data: journalist } = await supabase
-      .from('journalists')
-      .select('id')
-      .eq('email', session.user.email!)
-      .eq('status', 'approved')
-      .maybeSingle()
+    // 서버에서 역할 판별
+    const res = await fetch('/api/auth/role')
+    const { role, status } = await res.json()
 
-    router.push(journalist ? '/cms' : '/admin')
+    if (role === 'admin') {
+      router.push('/admin')
+    } else if (role === 'journalist' && status === 'approved') {
+      router.push('/cms')
+    } else if (role === 'journalist' && status === 'pending') {
+      router.push('/pending')
+    } else if (role === 'journalist' && status === 'rejected') {
+      router.push('/rejected')
+    } else {
+      await supabase.auth.signOut()
+      setError('접근 권한이 없습니다.')
+      setLoading(false)
+      return
+    }
+
     router.refresh()
   }
 
@@ -54,7 +65,7 @@ export default function LoginClient() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@example.com"
+              placeholder="journalist@example.com"
               required
               autoFocus
             />
@@ -77,6 +88,13 @@ export default function LoginClient() {
             {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', marginTop: 20, fontSize: '0.82rem', color: '#64748b' }}>
+          기자 계정이 없나요?{' '}
+          <Link href="/register" style={{ color: '#2563eb', textDecoration: 'none' }}>
+            가입 신청
+          </Link>
+        </div>
       </div>
     </div>
   )
