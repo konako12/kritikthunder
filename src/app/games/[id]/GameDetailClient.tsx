@@ -83,6 +83,8 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
           <Link href="/games">게임</Link>
           <Link href="/reviews">리뷰</Link>
           <Link href="/rankings">랭킹</Link>
+          <Link href="/collections">컬렉션</Link>
+          <Link href="/releases">출시 일정</Link>
         </nav>
       </header>
 

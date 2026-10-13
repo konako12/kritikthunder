@@ -6,14 +6,17 @@ import Link from 'next/link'
 import type { CriticReview, Game, Journalist, Report } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
 import CriticReviewsPanel from './CriticReviewsPanel'
+import CollectionsPanel, { type CollectionSummary } from './CollectionsPanel'
+import type { CurationSettings } from '@/lib/curation'
 import s from './admin.module.css'
 
-type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'reviews' | 'journalists' | 'reports'
+type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'reviews' | 'collections' | 'journalists' | 'reports'
 
 interface IgdbResult {
   igdb_id: number
   title: string
   year: number | null
+  release_date: string | null
   cover_id: string | null
   cover_thumb: string | null
   platforms: string[]
@@ -28,6 +31,8 @@ interface Props {
   initJournalists: Journalist[]
   initReports: Report[]
   initCriticReviews: CriticReview[]
+  collections: CollectionSummary[]
+  curationSettings: CurationSettings
   featuredGameId: number
 }
 
@@ -51,7 +56,7 @@ function statusBadge(status: Game['status']) {
   return map[status]
 }
 
-export default function AdminClient({ initGames, initJournalists, initReports, initCriticReviews, featuredGameId: initFeatId }: Props) {
+export default function AdminClient({ initGames, initJournalists, initReports, initCriticReviews, collections, curationSettings, featuredGameId: initFeatId }: Props) {
   const router = useRouter()
   const [page, setPage] = useState<Page>('dashboard')
   const [games, setGames] = useState<Game[]>(initGames)
@@ -70,6 +75,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
   const [fDev, setFDev]         = useState('')
   const [fPub, setFPub]         = useState('')
   const [fYear, setFYear]       = useState('')
+  const [fRelease, setFRelease] = useState('')
   const [fGenre, setFGenre]     = useState('')
   const [fRating, setFRating]   = useState('전체이용가')
   const [fStatus, setFStatus]   = useState<Game['status']>('published')
@@ -181,7 +187,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
       const data = await apiCall('/api/games', 'POST', {
         title: fTitle.trim(), developer: fDev.trim(),
         publisher: fPub.trim() || fDev.trim(),
-        year: Number(fYear), genre: fGenre, platforms: fPlats,
+        year: Number(fYear), release_date: fRelease || null, genre: fGenre, platforms: fPlats,
         age_rating: fRating, status: fStatus,
         cover_url: coverUrl, description: fDesc.trim() || null,
       })
@@ -194,7 +200,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
   }
 
   function resetForm() {
-    setFTitle(''); setFDev(''); setFPub(''); setFYear(''); setFGenre('')
+    setFTitle(''); setFDev(''); setFPub(''); setFYear(''); setFRelease(''); setFGenre('')
     setFRating('전체이용가'); setFStatus('published'); setFImg(''); setFDesc('')
     setFPlats([]); setFErrors({}); setFFile(null); setFPreview('')
     setIgdbCoverId(null); setIgdbQuery(''); setIgdbResults([]); setIgdbError(''); setIgdbIsApiError(false); setDupWarning(null)
@@ -229,6 +235,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
     if (r.developer) setFDev(r.developer)
     if (r.publisher) setFPub(r.publisher)
     if (r.year) setFYear(String(r.year))
+    setFRelease(r.release_date ?? '')
     if (r.genre && GENRES.includes(r.genre)) setFGenre(r.genre)
     if (r.platforms.length) setFPlats(r.platforms)
     if (r.summary) setFDesc(r.summary)
@@ -269,7 +276,8 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
       }
       const data = await apiCall(`/api/games/${editGame.id}`, 'PATCH', {
         title: editGame.title, developer: editGame.developer,
-        year: editGame.year, genre: editGame.genre, status: editGame.status,
+        year: editGame.year, release_date: editGame.release_date || null,
+        genre: editGame.genre, status: editGame.status,
         cover_url: coverUrl,
       })
       setGames(games.map((g) => (g.id === data.id ? data : g)))
@@ -349,6 +357,9 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
           <button className={`${s.sbItem} ${page === 'reviews' ? s.sbActive : ''}`} onClick={() => setPage('reviews')}>
             <span>📰</span> 전문가 리뷰
           </button>
+          <button className={`${s.sbItem} ${page === 'collections' ? s.sbActive : ''}`} onClick={() => setPage('collections')}>
+            <span>🗂️</span> 컬렉션 관리
+          </button>
           <div className={s.sbGroupLabel}>사용자</div>
           <button className={`${s.sbItem} ${page === 'journalists' ? s.sbActive : ''}`} onClick={() => setPage('journalists')}>
             <span>✍️</span> 기자 계정 관리
@@ -389,7 +400,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
             <span className={s.crumbSep}>/</span>
             <span className={s.crumbPage}>
               {{ dashboard: '대시보드', games: '게임 목록', add: '게임 등록',
-                 featured: '메인 노출 설정', reviews: '전문가 리뷰', journalists: '기자 계정 관리', reports: '리뷰 신고' }[page]}
+                 featured: '메인 노출 설정', reviews: '전문가 리뷰', collections: '컬렉션 관리', journalists: '기자 계정 관리', reports: '리뷰 신고' }[page]}
             </span>
           </div>
           <div className={s.topbarRight}>
@@ -645,6 +656,12 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                       {fErrors.year && <span className={s.formError}>{fErrors.year}</span>}
                     </div>
                   </div>
+                  <div className={s.formGroup}>
+                    <label className={s.formLabel}>출시일</label>
+                    <input className={s.formInput} type="date" value={fRelease} style={{ maxWidth: 200 }}
+                      onChange={(e) => { setFRelease(e.target.value); if (e.target.value) setFYear(e.target.value.slice(0, 4)) }} />
+                    <span className={s.uploadHint}>비워두면 출시 일정에서 "출시일 미정"으로 표시돼요 (출시연도 기준)</span>
+                  </div>
                   <div className={s.formGrid3}>
                     <div className={s.formGroup}>
                       <label className={s.formLabel}>장르 <span className={s.req}>*</span></label>
@@ -712,6 +729,10 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                 </div>
               </div>
             </div>
+          )}
+
+          {page === 'collections' && (
+            <CollectionsPanel collections={collections} settings={curationSettings} showToast={showToast} />
           )}
 
           {page === 'reviews' && (
@@ -897,6 +918,11 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                   <label className={s.formLabel}>출시연도</label>
                   <input className={s.formInput} type="number" value={editGame.year} onChange={(e) => setEditGame({ ...editGame, year: Number(e.target.value) })} />
                 </div>
+              </div>
+              <div className={s.formGroup}>
+                <label className={s.formLabel}>출시일 (비우면 미정)</label>
+                <input className={s.formInput} type="date" value={editGame.release_date ?? ''}
+                  onChange={(e) => setEditGame({ ...editGame, release_date: e.target.value || null, year: e.target.value ? Number(e.target.value.slice(0, 4)) : editGame.year })} />
               </div>
               <div className={s.formGroup}>
                 <label className={s.formLabel}>상태</label>

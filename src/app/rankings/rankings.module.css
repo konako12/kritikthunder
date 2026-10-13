@@ -79,6 +79,44 @@
   color: var(--gold) !important;
 }
 
+/* ── 탭 ── */
+.tabs { display: flex; gap: 0.3rem; margin-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+.tab {
+  padding: 0.7rem 1.1rem; margin-bottom: -1px;
+  font-size: 0.92rem; font-weight: 700; color: var(--text-sub);
+  border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tabActive { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* ── 평론가 vs 유저 ── */
+.vsGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+.vsSection { min-width: 0; }
+.vsTitle { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+.vsCount {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 400; color: var(--text-sub);
+  background: var(--elevated); border-radius: 10px; padding: 0.1rem 0.5rem;
+}
+.vsEmpty {
+  padding: 2.5rem 1rem; text-align: center; font-size: 0.85rem; color: var(--text-sub);
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+}
+.vsRow {
+  display: grid; grid-template-columns: 51px minmax(0, 1fr) 58px 58px 58px;
+  align-items: center; gap: 0.9rem; padding: 0.75rem 1.1rem;
+  border-top: 1px solid var(--border); color: inherit; transition: background 0.15s;
+}
+.vsRow:first-child { border-top: none; }
+a.vsRow:hover { background: var(--elevated); }
+.vsNum { text-align: center; }
+.vsChip {
+  display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 1.45rem; line-height: 1;
+  padding: 0.08rem 0.45rem; border-radius: 5px;
+}
+.vsDiff { font-family: 'DM Mono', monospace; font-size: 0.95rem; font-weight: 700; }
+.diffCritic { color: var(--gold); }
+.diffUser { color: #4d9cf8; }
+
 /* ── TOP 3 ── */
 .podium {
   display: grid; grid-template-columns: 1fr 1.15fr 1fr;
@@ -228,6 +266,10 @@ a.row:hover { background: var(--elevated); }
   /* TOP3 세로 쌓기 — 순위 순서대로 */
   .podium { grid-template-columns: 1fr; gap: 1rem; }
   .podium > :nth-child(n) { order: 0; }
+
+  .vsGrid { grid-template-columns: 1fr; }
+  .vsRow { grid-template-columns: 42px minmax(0, 1fr) 44px 44px 44px; gap: 0.6rem; padding: 0.7rem 0.8rem; }
+  .vsChip { font-size: 1.2rem; }
 
   /* 장르·플랫폼 열 숨김 */
   .row { grid-template-columns: 32px 42px minmax(0, 1fr) auto; gap: 0.75rem; padding: 0.75rem 0.9rem; }

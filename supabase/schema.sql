@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS games (
   developer   TEXT NOT NULL,
   publisher   TEXT,
   year        INTEGER NOT NULL,
+  release_date DATE,
   genre       TEXT NOT NULL,
   platforms   TEXT[] DEFAULT '{}',
   critic_score INTEGER CHECK (critic_score >= 0 AND critic_score <= 100),

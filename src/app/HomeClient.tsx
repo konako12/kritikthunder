@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import type { Game, CriticReview } from '@/lib/types'
 import { scoreClass, sourceDomain } from '@/lib/utils'
+import type { Collection } from '@/lib/curation'
+import CollectionCard from './collections/CollectionCard'
+import cs from './collections/collections.module.css'
 import s from './page.module.css'
 
 interface Props {
@@ -13,9 +16,10 @@ interface Props {
   reviews: CriticReview[]
   upcoming: { title: string; developer: string; cover_url: string | null; year: number }[]
   allGames: Game[]
+  collections: Collection[]
 }
 
-export default function HomeClient({ featured, top5, recent, reviews, upcoming, allGames }: Props) {
+export default function HomeClient({ featured, top5, recent, reviews, upcoming, allGames, collections }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [searchQ, setSearchQ] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -58,6 +62,8 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
           <div className={s.navLinks}>
             <Link href="/games">게임</Link>
             <Link href="/rankings">랭킹</Link>
+            <Link href="/collections">컬렉션</Link>
+            <Link href="/releases">출시 일정</Link>
             <Link href="/reviews">리뷰</Link>
             <div className={s.navSearch} ref={searchRef}>
               <span className={s.searchIcon}>⌕</span>
@@ -178,6 +184,24 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
         </div>
       </section>
 
+      {/* ── 추천 컬렉션 ── */}
+      {collections.length > 0 && (
+        <section className={s.section}>
+          <div className={s.wrap}>
+            <div className={s.rowHead}>
+              <div>
+                <span className={s.rowTitle}>추천 <span className={s.hl}>컬렉션</span></span>
+                <span className={s.rowSub}>// 전문가 점수로 자동 선정</span>
+              </div>
+              <Link href="/collections" className={s.rowMore}>전체 컬렉션 →</Link>
+            </div>
+            <div className={cs.grid}>
+              {collections.map((c) => <CollectionCard key={c.slug} collection={c} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── 최근 리뷰된 게임 ── */}
       <section className={s.section}>
         <div className={s.wrap}>
@@ -262,6 +286,7 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
                 <span className={s.rowTitle}>출시 예정 <span className={s.hl}>기대작</span></span>
                 <span className={s.rowSub}>// 점수 미정 TBD</span>
               </div>
+              <Link href="/releases" className={s.rowMore}>출시 일정 전체 보기 →</Link>
             </div>
           </div>
           <div className={s.hsWrap}>

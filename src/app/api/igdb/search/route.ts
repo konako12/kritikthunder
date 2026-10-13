@@ -151,6 +151,10 @@ export async function GET(req: NextRequest) {
         ? new Date(g.first_release_date * 1000).getFullYear()
         : null
 
+      const release_date = g.first_release_date
+        ? new Date(g.first_release_date * 1000).toISOString().slice(0, 10)
+        : null
+
       const rawPlats = (g.platforms ?? [])
         .map((p: { id: number }) => PLATFORM_MAP[p.id])
         .filter(Boolean)
@@ -165,6 +169,7 @@ export async function GET(req: NextRequest) {
         igdb_id:     g.id,
         title:       g.name,
         year,
+        release_date,
         cover_id:    g.cover?.image_id ?? null,
         cover_thumb: g.cover?.image_id
           ? `https://images.igdb.com/igdb/image/upload/t_cover_small/${g.cover.image_id}.jpg`

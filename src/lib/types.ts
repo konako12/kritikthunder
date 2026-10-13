@@ -4,6 +4,7 @@ export interface Game {
   developer: string
   publisher: string | null
   year: number
+  release_date: string | null
   genre: string
   platforms: string[]
   critic_score: number | null

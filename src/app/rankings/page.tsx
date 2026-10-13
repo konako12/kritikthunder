@@ -2,29 +2,22 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { scoreClass } from '@/lib/utils'
-import type { Game } from '@/lib/types'
+import { PLATFORM_TABS, parsePlatform, platformLabel } from '@/lib/platforms'
+import { byScore, criticVsUser, loadGameStats, type VsRow } from '@/lib/curation'
 import s from './rankings.module.css'
 
 export const dynamic = 'force-dynamic'
 
 const PAGE_SIZE = 20
 
-/** 플랫폼 탭 — value는 DB 저장값, label은 화면 표시 */
-const PLATFORM_TABS = [
-  { value: 'PS5',    label: 'PS5' },
-  { value: 'Xbox',   label: 'Xbox' },
-  { value: 'PC',     label: 'PC' },
-  { value: 'Switch', label: 'Switch' },
-  { value: 'Mobile', label: '모바일' },
-]
-
 const MEDALS = ['🥇', '🥈', '🥉']
 
-type RankedGame = Game & { review_count: number }
+type Tab = 'score' | 'vs'
 
-type SearchParams = Promise<{ year?: string; platform?: string; page?: string }>
+type SearchParams = Promise<{ tab?: string; year?: string; platform?: string; page?: string }>
 
 interface Filters {
+  tab: Tab
   year: number | null
   platform: string | null
   page: number
@@ -32,17 +25,15 @@ interface Filters {
 
 function parseFilters(sp: Awaited<SearchParams>): Filters {
   const year = Number(sp.year)
-  const platform = PLATFORM_TABS.some((p) => p.value === sp.platform) ? sp.platform! : null
+  const platform = parsePlatform(sp.platform)
   const page = Math.max(1, Math.floor(Number(sp.page)) || 1)
-  return { year: Number.isInteger(year) && year > 0 ? year : null, platform, page }
+  const tab: Tab = sp.tab === 'vs' ? 'vs' : 'score'
+  return { tab, year: Number.isInteger(year) && year > 0 ? year : null, platform, page }
 }
 
-function platformLabel(value: string): string {
-  return PLATFORM_TABS.find((p) => p.value === value)?.label ?? value
-}
-
-function buildTitle({ year, platform }: Filters): string {
+function buildTitle({ tab, year, platform }: Filters): string {
   const parts = [year && `${year}년`, platform && platformLabel(platform)].filter(Boolean)
+  if (tab === 'vs') return [...parts, '평론가 vs 유저'].join(' ')
   return parts.length ? `${parts.join(' ')} 최고의 게임` : '역대 최고의 게임'
 }
 
@@ -50,6 +41,7 @@ function buildTitle({ year, platform }: Filters): string {
 function hrefWith(f: Filters, patch: Partial<Filters>): string {
   const next = { ...f, page: 1, ...patch }
   const q = new URLSearchParams()
+  if (next.tab === 'vs') q.set('tab', 'vs')
   if (next.year)     q.set('year', String(next.year))
   if (next.platform) q.set('platform', next.platform)
   if (next.page > 1) q.set('page', String(next.page))
@@ -65,16 +57,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
   const filters = parseFilters(await searchParams)
   const supabase = await createClient()
 
-  const { data } = await supabase
-    .from('games')
-    .select('*, critic_reviews(count)')
-    .eq('status', 'published')
-    .not('critic_score', 'is', null)
-
-  const all: RankedGame[] = (data ?? []).map(({ critic_reviews, ...g }) => ({
-    ...(g as Game),
-    review_count: (critic_reviews as { count: number }[] | null)?.[0]?.count ?? 0,
-  }))
+  const { games: all, settings } = await loadGameStats(supabase)
 
   // 연도 탭: 랭킹 대상 게임의 출시연도 (최신순)
   const years = Array.from(new Set(all.map((g) => g.year).filter(Boolean))).sort((a, b) => b - a)
@@ -82,7 +65,8 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
   const ranked = all
     .filter((g) => !filters.year || g.year === filters.year)
     .filter((g) => !filters.platform || g.platforms.includes(filters.platform))
-    .sort((a, b) => b.critic_score! - a.critic_score! || b.review_count - a.review_count)
+    .sort(byScore)
+  const vs = criticVsUser(ranked, settings)
 
   const top3 = ranked.slice(0, 3)
   const rest = ranked.slice(3)
@@ -101,6 +85,8 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
           <nav>
             <Link href="/games">게임</Link>
             <Link href="/rankings" className={s.navActive}>랭킹</Link>
+            <Link href="/collections">컬렉션</Link>
+            <Link href="/releases">출시 일정</Link>
             <Link href="/reviews">리뷰</Link>
           </nav>
         </div>
@@ -111,11 +97,21 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
         <div className={s.pageHeroInner}>
           <div className={s.pageHeroBadge}>RANKING</div>
           <h1 className={s.pageHeroTitle}>{buildTitle(filters)}</h1>
-          <p className={s.pageHeroSub}>전문가 점수 기준 · 점수가 같으면 리뷰 수 순</p>
+          <p className={s.pageHeroSub}>
+            {filters.tab === 'vs'
+              ? `전문가 리뷰 ${settings.minCriticReviews}개·유저 리뷰 ${settings.minUserReviews}개 이상 · 유저 별점 ×20 환산`
+              : '전문가 점수 기준 · 점수가 같으면 리뷰 수 순'}
+          </p>
         </div>
       </div>
 
       <div className={s.container}>
+
+        {/* 탭 */}
+        <div className={s.tabs}>
+          <Link href={hrefWith(filters, { tab: 'score' })} className={`${s.tab} ${filters.tab === 'score' ? s.tabActive : ''}`}>점수 랭킹</Link>
+          <Link href={hrefWith(filters, { tab: 'vs' })} className={`${s.tab} ${filters.tab === 'vs' ? s.tabActive : ''}`}>평론가 vs 유저</Link>
+        </div>
 
         {/* 필터 */}
         <div className={s.filterBar}>
@@ -143,7 +139,19 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
           </div>
         </div>
 
-        {ranked.length === 0 ? (
+        {filters.tab === 'vs' ? (
+          vs.criticHigher.length + vs.userHigher.length === 0 ? (
+            <div className={s.empty}>
+              <div className={s.emptyIcon}>⊘</div>
+              <div>해당 조건의 게임이 없어요</div>
+            </div>
+          ) : (
+            <div className={s.vsGrid}>
+              <VsList title="평론가가 더 높게 본 게임" rows={vs.criticHigher} />
+              <VsList title="유저가 더 높게 본 게임" rows={vs.userHigher} />
+            </div>
+          )
+        ) : ranked.length === 0 ? (
           <div className={s.empty}>
             <div className={s.emptyIcon}>⊘</div>
             <div>해당 조건의 게임이 없어요</div>
@@ -249,5 +257,46 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
         </div>
       </footer>
     </div>
+  )
+}
+
+function VsList({ title, rows }: { title: string; rows: VsRow[] }) {
+  return (
+    <section className={s.vsSection}>
+      <h2 className={s.vsTitle}>{title} <span className={s.vsCount}>{rows.length}</span></h2>
+      {rows.length === 0 ? (
+        <div className={s.vsEmpty}>해당하는 게임이 없어요</div>
+      ) : (
+        <div className={s.list}>
+          <div className={`${s.vsRow} ${s.listHead}`}>
+            <span className={s.coverCol} />
+            <span className={s.info}>게임</span>
+            <span className={s.vsNum}>평론가</span>
+            <span className={s.vsNum}>유저</span>
+            <span className={s.vsNum}>차이</span>
+          </div>
+          {rows.map((g) => (
+            <Link href={`/games/${g.id}`} key={g.id} className={s.vsRow}>
+              <span className={s.coverCol}>
+                {g.cover_url ? (
+                  <img src={g.cover_url} alt={g.title} className={s.cover} />
+                ) : (
+                  <span className={s.coverFallback}>{g.title[0]}</span>
+                )}
+              </span>
+              <span className={s.info}>
+                <span className={s.title}>{g.title}</span>
+                <span className={s.meta}>{g.developer} · {g.year}</span>
+              </span>
+              <span className={s.vsNum}><span className={`${s.vsChip} ${scoreClass(g.critic_score)}`}>{g.critic_score}</span></span>
+              <span className={s.vsNum}><span className={`${s.vsChip} ${scoreClass(g.user_score)}`}>{g.user_score}</span></span>
+              <span className={`${s.vsNum} ${s.vsDiff} ${g.diff > 0 ? s.diffCritic : s.diffUser}`}>
+                +{Math.abs(g.diff)}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }

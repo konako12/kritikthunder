@@ -1,0 +1,181 @@
+.root {
+  background: var(--void);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px;
+  background: rgba(6,8,12,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.headerInner {
+  max-width: 1280px; height: 100%; margin: 0 auto; padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem;
+  letter-spacing: 0.12em; color: var(--gold);
+}
+.logo span { color: var(--text); }
+.header nav { display: flex; gap: 1.8rem; }
+.header nav a {
+  color: var(--text-sub); font-size: 0.78rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s;
+}
+.header nav a:hover { color: var(--text); }
+.navActive { color: var(--gold) !important; }
+
+/* ── PAGE HERO ── */
+.pageHero {
+  margin-top: 56px;
+  background: linear-gradient(180deg, rgba(245,200,66,0.04) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 3.5rem 2rem 2.5rem;
+}
+.pageHeroInner { max-width: 1280px; margin: 0 auto; text-align: center; }
+.pageHeroBadge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace; font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.18em; color: var(--gold);
+  background: var(--gold-dim); border: 1px solid rgba(245,200,66,0.25);
+  border-radius: 20px; padding: 0.25rem 0.9rem; margin-bottom: 1rem;
+}
+.pageHeroTitle {
+  font-size: 2.6rem; font-weight: 900; line-height: 1.15; color: #fff; margin-bottom: 0.6rem;
+}
+.pageHeroSub { font-size: 0.85rem; color: var(--text-sub); }
+
+/* ── CONTAINER ── */
+.container { max-width: 1280px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+
+/* ── 월 이동 ── */
+.monthNav {
+  display: flex; align-items: center; justify-content: center; gap: 1.5rem;
+  margin-bottom: 1.4rem;
+}
+.monthBtn {
+  padding: 0.45rem 0.95rem; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--card);
+  font-size: 0.8rem; color: var(--text-sub); white-space: nowrap;
+  transition: all 0.15s;
+}
+.monthBtn:hover { border-color: var(--border-hi); color: var(--text); }
+.monthTitle {
+  font-size: 1.5rem; font-weight: 800; min-width: 9.5rem; text-align: center;
+}
+
+/* ── 플랫폼 필터 ── */
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; margin-bottom: 2rem; }
+.chip {
+  padding: 0.3rem 0.85rem; border-radius: 20px;
+  background: var(--elevated); border: 1px solid var(--border);
+  color: var(--text-sub); font-size: 0.75rem; font-weight: 500;
+  transition: all 0.15s;
+}
+.chip:hover { border-color: var(--border-hi); color: var(--text); }
+.chipActive {
+  background: var(--gold-dim) !important;
+  border-color: rgba(245,200,66,0.4) !important;
+  color: var(--gold) !important;
+}
+
+/* ── 날짜별 ── */
+.days { display: flex; flex-direction: column; gap: 1.2rem; }
+.day {
+  display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 1.2rem;
+  padding-top: 1.2rem; border-top: 1px solid var(--border);
+}
+.day:first-child { border-top: none; padding-top: 0; }
+.dayHead { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; padding-top: 0.9rem; }
+.dayLabel { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.dayToday .dayLabel { color: var(--gold); }
+.todayBadge {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+  padding: 0.12rem 0.5rem; border-radius: 3px;
+  background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(245,200,66,0.3);
+}
+.dayGames { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.65rem; }
+
+/* ── 게임 카드 ── */
+.game {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.75rem 1rem;
+  color: inherit; transition: border-color 0.18s, transform 0.15s;
+}
+.game:hover { border-color: var(--border-hi); transform: translateY(-2px); }
+.cover { width: 51px; height: 68px; object-fit: cover; border-radius: 5px; flex-shrink: 0; }
+.coverFallback {
+  width: 51px; height: 68px; border-radius: 5px; flex-shrink: 0; background: var(--elevated);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--text-muted);
+}
+.info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.title {
+  font-size: 1rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.meta { font-size: 0.78rem; color: var(--text-sub); margin-top: 0.12rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+.tag {
+  font-size: 0.66rem; padding: 0.12rem 0.45rem; border-radius: 3px;
+  color: #4d9cf8; border: 1px solid rgba(77,156,248,0.25); background: rgba(77,156,248,0.1);
+}
+/* 점수 칩 — 메인 TOP5(.t5s)와 동일 */
+.scoreChip {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; line-height: 1;
+  padding: 0.09rem 0.55rem; border-radius: 7px; flex-shrink: 0;
+}
+
+/* ── 출시일 미정 ── */
+.tbd { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.tbdHead { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+.tbdTitle { font-size: 1.15rem; font-weight: 800; }
+.tbdCount {
+  font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--text-sub);
+  background: var(--elevated); border-radius: 10px; padding: 0.1rem 0.55rem;
+}
+.tbdGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.65rem; }
+
+/* ── EMPTY ── */
+.empty {
+  text-align: center; padding: 4rem 2rem;
+  color: var(--text-sub); font-size: 0.92rem;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+}
+.emptyIcon { font-size: 2.2rem; margin-bottom: 0.8rem; opacity: 0.6; }
+
+/* ── FOOTER ── */
+.footer { border-top: 1px solid var(--border); margin-top: 2rem; }
+.footerInner {
+  max-width: 1280px; margin: 0 auto; padding: 2rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ftLogo { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--gold); letter-spacing: 0.1em; }
+.ftLogo span { color: var(--text-muted); }
+.ftSub { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.2rem; }
+.ftText { font-size: 0.68rem; color: var(--text-muted); }
+.pressLinks { margin-top: 0.4rem; font-size: 0.62rem; color: rgba(255,255,255,0.25); }
+.pressLinks a { color: rgba(255,255,255,0.35); }
+.pressLinks a:hover { color: var(--text-muted); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .headerInner { padding: 0 1.2rem; }
+  .header nav { gap: 1rem; }
+  .pageHero { padding: 2.8rem 1.2rem 2rem; }
+  .pageHeroTitle { font-size: 1.9rem; }
+  .container { padding: 1.5rem 1.2rem 3rem; }
+  .monthNav { gap: 0.6rem; }
+  .monthBtn { padding: 0.4rem 0.6rem; font-size: 0.72rem; }
+  .monthTitle { font-size: 1.15rem; min-width: 0; }
+  .day { grid-template-columns: 1fr; gap: 0.6rem; }
+  .dayHead { flex-direction: row; align-items: center; padding-top: 0; }
+  .dayGames, .tbdGrid { grid-template-columns: 1fr; }
+  .footerInner { flex-direction: column; gap: 1rem; text-align: center; padding: 2rem 1.2rem; }
+}

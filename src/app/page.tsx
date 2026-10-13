@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import type { Game, CriticReview } from '@/lib/types'
+import { buildCollections, featuredCollections, loadGameStats } from '@/lib/curation'
 import HomeClient from './HomeClient'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +10,7 @@ export default async function HomePage() {
   const supabase = await createClient()
 
   // 병렬 데이터 fetch
-  const [gamesRes, reviewsRes, settingsRes] = await Promise.all([
+  const [gamesRes, reviewsRes, settingsRes, stats] = await Promise.all([
     supabase.from('games').select('*').order('created_at', { ascending: false }),
     supabase
       .from('critic_reviews')
@@ -17,6 +18,7 @@ export default async function HomePage() {
       .order('created_at', { ascending: false })
       .limit(8),
     supabase.from('settings').select('*'),
+    loadGameStats(supabase),
   ])
 
   const games: Game[] = gamesRes.data ?? []
@@ -30,6 +32,10 @@ export default async function HomePage() {
   const top5      = [...published].sort((a, b) => (b.critic_score ?? 0) - (a.critic_score ?? 0)).slice(0, 5)
   const featured  = games.find((g) => g.id === featuredId) ?? published[0]
 
+  // 추천 컬렉션 — 고정 우선, 최근 기간 순 4개 (카드에는 상위 3개만 필요)
+  const collections = featuredCollections(buildCollections(stats.games, stats.settings), stats.settings)
+    .map((c) => ({ ...c, games: c.games.slice(0, 3) }))
+
   return (
     <HomeClient
       featured={featured}
@@ -37,6 +43,7 @@ export default async function HomePage() {
       recent={published}
       reviews={reviews}
       upcoming={upcoming}
+      collections={collections}
       allGames={published}
     />
   )
