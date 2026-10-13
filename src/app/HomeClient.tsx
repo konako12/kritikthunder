@@ -57,7 +57,7 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
           <Link href="/" className={s.logo}>KRIT<span>IK</span></Link>
           <div className={s.navLinks}>
             <Link href="/games">게임</Link>
-            <Link href="/ranking">랭킹</Link>
+            <Link href="/rankings">랭킹</Link>
             <Link href="/reviews">리뷰</Link>
             <div className={s.navSearch} ref={searchRef}>
               <span className={s.searchIcon}>⌕</span>
@@ -150,7 +150,7 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
               </span>
               <span className={s.rowSub}>// 전문가 점수 기준</span>
             </div>
-            <Link href="/ranking" className={s.rowMore}>전체 랭킹 →</Link>
+            <Link href="/rankings" className={s.rowMore}>전체 랭킹 →</Link>
           </div>
           <div className={s.top5List}>
             {top5.map((g, i) => (

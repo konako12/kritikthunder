@@ -1,0 +1,240 @@
+.root {
+  background: var(--void);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px;
+  background: rgba(6,8,12,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.headerInner {
+  max-width: 1280px; height: 100%; margin: 0 auto; padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem;
+  letter-spacing: 0.12em; color: var(--gold);
+}
+.logo span { color: var(--text); }
+.header nav { display: flex; gap: 1.8rem; }
+.header nav a {
+  color: var(--text-sub); font-size: 0.78rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s;
+}
+.header nav a:hover { color: var(--text); }
+.navActive { color: var(--gold) !important; }
+
+/* ── PAGE HERO ── */
+.pageHero {
+  margin-top: 56px;
+  background: linear-gradient(180deg, rgba(245,200,66,0.04) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 3.5rem 2rem 2.5rem;
+}
+.pageHeroInner { max-width: 1280px; margin: 0 auto; text-align: center; }
+.pageHeroBadge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace; font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.18em; color: var(--gold);
+  background: var(--gold-dim); border: 1px solid rgba(245,200,66,0.25);
+  border-radius: 20px; padding: 0.25rem 0.9rem; margin-bottom: 1rem;
+}
+.pageHeroTitle {
+  font-size: 2.6rem; font-weight: 900; letter-spacing: -0.01em;
+  line-height: 1.15; color: #fff; margin-bottom: 0.6rem;
+}
+.pageHeroSub { font-size: 0.85rem; color: var(--text-sub); }
+
+/* ── CONTAINER ── */
+.container { max-width: 1280px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+
+/* ── FILTER BAR ── */
+.filterBar {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.2rem 1.5rem;
+  display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 2rem;
+}
+.filterGroup { display: flex; align-items: flex-start; gap: 1rem; }
+.filterLabel {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--text-sub); min-width: 46px; padding-top: 0.38rem; flex-shrink: 0;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip {
+  padding: 0.3rem 0.8rem; border-radius: 20px;
+  background: var(--elevated); border: 1px solid var(--border);
+  color: var(--text-sub); font-size: 0.75rem; font-weight: 500;
+  letter-spacing: 0.04em; transition: all 0.15s;
+}
+.chip:hover { border-color: var(--border-hi); color: var(--text); }
+.chipActive {
+  background: var(--gold-dim) !important;
+  border-color: rgba(245,200,66,0.4) !important;
+  color: var(--gold) !important;
+}
+
+/* ── TOP 3 ── */
+.podium {
+  display: grid; grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: end; gap: 1.2rem; margin-bottom: 2.2rem;
+}
+/* 1위를 가운데에 */
+.podium > :nth-child(1) { order: 2; }
+.podium > :nth-child(2) { order: 1; }
+.podium > :nth-child(3) { order: 3; }
+
+.podiumCard {
+  display: flex; flex-direction: column;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; color: inherit;
+  transition: border-color 0.18s, transform 0.18s;
+}
+.podiumCard:hover { border-color: var(--border-hi); transform: translateY(-4px); }
+.podiumFirst {
+  border-color: rgba(245,200,66,0.35);
+  box-shadow: 0 10px 40px rgba(245,200,66,0.08);
+}
+.podiumFirst:hover { border-color: rgba(245,200,66,0.6); }
+
+.podiumCoverWrap { position: relative; aspect-ratio: 16 / 10; background: var(--elevated); }
+.podiumFirst .podiumCoverWrap { aspect-ratio: 16 / 11; }
+.podiumCover { width: 100%; height: 100%; object-fit: cover; display: block; }
+.podiumCoverFallback {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--text-muted);
+}
+.podiumMedal {
+  position: absolute; top: 0.7rem; left: 0.7rem;
+  font-size: 2rem; line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+}
+.podiumFirst .podiumMedal { font-size: 2.5rem; }
+
+.podiumBody { padding: 1rem 1.1rem 1.15rem; }
+.podiumHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; margin-bottom: 0.7rem; }
+.podiumTitle { font-size: 1.1rem; font-weight: 700; line-height: 1.3; }
+.podiumFirst .podiumTitle { font-size: 1.3rem; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.tag {
+  font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 3px;
+  background: var(--elevated); border: 1px solid var(--border); color: var(--text-sub);
+}
+.tagPlatform { color: #4d9cf8; border-color: rgba(77,156,248,0.25); background: rgba(77,156,248,0.1); }
+
+/* 점수 칩 — 메인 TOP5(.t5s)와 동일 */
+.scoreChip {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.17rem; line-height: 1;
+  padding: 0.09rem 0.63rem; border-radius: 7px; flex-shrink: 0;
+}
+
+/* ── 4위 이하 리스트 ── */
+.list {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.row {
+  display: grid;
+  grid-template-columns: 48px 51px minmax(0, 1fr) 140px 180px 72px;
+  align-items: center; gap: 1.1rem;
+  padding: 0.8rem 1.3rem;
+  border-top: 1px solid var(--border);
+  color: inherit; transition: background 0.15s;
+}
+.row:first-child { border-top: none; }
+a.row:hover { background: var(--elevated); }
+.listHead {
+  padding-top: 0.6rem; padding-bottom: 0.6rem;
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted);
+}
+
+.rank {
+  font-family: 'DM Mono', monospace; font-size: 1rem;
+  color: var(--text-sub); text-align: center;
+}
+.coverCol { display: block; }
+.cover { width: 51px; height: 68px; object-fit: cover; border-radius: 5px; display: block; }
+.coverFallback {
+  width: 51px; height: 68px; border-radius: 5px; background: var(--elevated);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--text-muted);
+}
+.info { display: flex; flex-direction: column; min-width: 0; }
+.title {
+  font-size: 1.05rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
+.genreCol, .platformCol {
+  font-size: 0.8rem; color: var(--text-sub);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.scoreCol { display: flex; justify-content: flex-end; }
+
+/* ── PAGINATION ── */
+.pagination { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.35rem; margin-top: 1.8rem; }
+.pageBtn {
+  min-width: 36px; height: 36px; padding: 0 0.6rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; border: 1px solid var(--border); background: var(--card);
+  font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--text-sub);
+  transition: all 0.15s;
+}
+.pageBtn:hover { border-color: var(--border-hi); color: var(--text); }
+.pageActive { background: var(--gold-dim); border-color: rgba(245,200,66,0.4); color: var(--gold); }
+
+/* ── EMPTY ── */
+.empty {
+  text-align: center; padding: 5rem 2rem;
+  color: var(--text-sub); font-size: 0.92rem;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+}
+.emptyIcon { font-size: 2.5rem; margin-bottom: 0.8rem; opacity: 0.5; }
+
+/* ── FOOTER ── */
+.footer { border-top: 1px solid var(--border); margin-top: 2rem; }
+.footerInner {
+  max-width: 1280px; margin: 0 auto; padding: 2rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ftLogo { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--gold); letter-spacing: 0.1em; }
+.ftLogo span { color: var(--text-muted); }
+.ftSub { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.2rem; }
+.ftText { font-size: 0.68rem; color: var(--text-muted); }
+.pressLinks { margin-top: 0.4rem; font-size: 0.62rem; color: rgba(255,255,255,0.25); }
+.pressLinks a { color: rgba(255,255,255,0.35); }
+.pressLinks a:hover { color: var(--text-muted); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+  .row { grid-template-columns: 44px 51px minmax(0, 1fr) 110px 130px 64px; gap: 0.9rem; }
+}
+
+@media (max-width: 768px) {
+  .headerInner { padding: 0 1.2rem; }
+  .pageHero { padding: 2.8rem 1.2rem 2rem; }
+  .pageHeroTitle { font-size: 1.9rem; }
+  .container { padding: 1.5rem 1.2rem 3rem; }
+  .filterBar { padding: 1rem; }
+  .filterGroup { flex-direction: column; gap: 0.5rem; }
+
+  /* TOP3 세로 쌓기 — 순위 순서대로 */
+  .podium { grid-template-columns: 1fr; gap: 1rem; }
+  .podium > :nth-child(n) { order: 0; }
+
+  /* 장르·플랫폼 열 숨김 */
+  .row { grid-template-columns: 32px 42px minmax(0, 1fr) auto; gap: 0.75rem; padding: 0.75rem 0.9rem; }
+  .genreCol, .platformCol { display: none; }
+  .cover, .coverFallback { width: 42px; height: 56px; }
+  .title { font-size: 0.95rem; }
+  .scoreChip { font-size: 1.7rem; }
+
+  .footerInner { flex-direction: column; gap: 1rem; text-align: center; padding: 2rem 1.2rem; }
+}

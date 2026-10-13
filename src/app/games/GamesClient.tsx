@@ -65,7 +65,7 @@ export default function GamesClient({ games }: Props) {
         <Link href="/" className={s.logo}>KRIT<span>IK</span></Link>
         <nav>
           <Link href="/games" className={s.navActive}>게임</Link>
-          <Link href="/ranking">랭킹</Link>
+          <Link href="/rankings">랭킹</Link>
         </nav>
       </header>
 
