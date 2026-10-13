@@ -327,6 +327,12 @@
 .rcFoot { display: flex; justify-content: space-between; margin-top: 0.7rem; }
 .rcName { font-size: 0.65rem; color: var(--text-muted); }
 .rcDate { font-size: 0.62rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+.rcSource {
+  display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.6rem; align-self: flex-start;
+  font-size: 0.68rem; font-weight: 600; color: var(--gold);
+}
+.rcSource:hover { text-decoration: underline; }
+.rcSourceDomain { font-family: 'DM Mono', monospace; font-weight: 400; color: var(--text-muted); }
 
 /* ══════════════════════════════════════════
    UPCOMING 기대작 카드

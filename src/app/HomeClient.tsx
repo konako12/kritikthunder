@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import type { Game, CriticReview } from '@/lib/types'
-import { scoreClass } from '@/lib/utils'
+import { scoreClass, sourceDomain } from '@/lib/utils'
 import s from './page.module.css'
 
 interface Props {
@@ -240,6 +240,11 @@ export default function HomeClient({ featured, top5, recent, reviews, upcoming, 
                       <span className={s.rcName}>{r.reviewer_name}</span>
                       <span className={s.rcDate}>{r.published_at}</span>
                     </div>
+                    {r.source_url && (
+                      <a href={r.source_url} target="_blank" rel="noopener noreferrer" className={s.rcSource}>
+                        원문 보기 ↗ <span className={s.rcSourceDomain}>{sourceDomain(r.source_url)}</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               )

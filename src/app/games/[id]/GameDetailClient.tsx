@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import type { Game, CriticReview, UserReview } from '@/lib/types'
-import { scoreClass, formatDate, initial } from '@/lib/utils'
+import { scoreClass, formatDate, initial, sourceDomain } from '@/lib/utils'
 import { createClient } from '@/lib/supabase-client'
 import s from './page.module.css'
 
@@ -201,7 +201,14 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
                       }`}>{r.score}</div>
                     </div>
                     <div className={s.reviewText}>{r.review_text}</div>
-                    <div className={s.reviewDate}>{r.published_at}</div>
+                    <div className={s.reviewFoot}>
+                      <span className={s.reviewDate}>{r.published_at}</span>
+                      {r.source_url && (
+                        <a href={r.source_url} target="_blank" rel="noopener noreferrer" className={s.sourceLink}>
+                          원문 보기 ↗ <span className={s.sourceDomain}>{sourceDomain(r.source_url)}</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

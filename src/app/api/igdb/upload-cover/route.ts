@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
+import { requireAdmin } from '@/lib/admin-auth'
 
 // POST /api/igdb/upload-cover  { cover_id: string }
 // IGDB 고해상도 커버를 다운로드해서 Supabase Storage에 저장 후 공개 URL 반환
 export async function POST(req: NextRequest) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const { cover_id } = await req.json()
   if (!cover_id || typeof cover_id !== 'string') {
     return NextResponse.json({ error: 'cover_id 필요' }, { status: 400 })

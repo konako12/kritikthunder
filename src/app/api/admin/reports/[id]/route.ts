@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
+import { requireAdmin } from '@/lib/admin-auth'
 
 // DELETE /api/admin/reports/:id — 신고 처리
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const { id } = await params
   const supabase = createAdminClient()
   const { error } = await supabase.from('reports').delete().eq('id', id)
@@ -18,6 +22,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const { id } = await params
   const supabase = createAdminClient()
   const { status } = await req.json()

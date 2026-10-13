@@ -3,11 +3,12 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { Game, Journalist, Report } from '@/lib/types'
+import type { CriticReview, Game, Journalist, Report } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
+import CriticReviewsPanel from './CriticReviewsPanel'
 import s from './admin.module.css'
 
-type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'journalists' | 'reports'
+type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'reviews' | 'journalists' | 'reports'
 
 interface IgdbResult {
   igdb_id: number
@@ -26,6 +27,7 @@ interface Props {
   initGames: Game[]
   initJournalists: Journalist[]
   initReports: Report[]
+  initCriticReviews: CriticReview[]
   featuredGameId: number
 }
 
@@ -49,12 +51,13 @@ function statusBadge(status: Game['status']) {
   return map[status]
 }
 
-export default function AdminClient({ initGames, initJournalists, initReports, featuredGameId: initFeatId }: Props) {
+export default function AdminClient({ initGames, initJournalists, initReports, initCriticReviews, featuredGameId: initFeatId }: Props) {
   const router = useRouter()
   const [page, setPage] = useState<Page>('dashboard')
   const [games, setGames] = useState<Game[]>(initGames)
   const [journalists, setJournalists] = useState<Journalist[]>(initJournalists)
   const [reports, setReports] = useState<Report[]>(initReports)
+  const [criticReviews, setCriticReviews] = useState<CriticReview[]>(initCriticReviews)
   const [featuredId, setFeaturedId] = useState(initFeatId)
   const [tmpFeatId, setTmpFeatId] = useState(initFeatId)
 
@@ -343,6 +346,9 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
           <button className={`${s.sbItem} ${page === 'featured' ? s.sbActive : ''}`} onClick={() => setPage('featured')}>
             <span>⭐</span> 메인 노출 설정
           </button>
+          <button className={`${s.sbItem} ${page === 'reviews' ? s.sbActive : ''}`} onClick={() => setPage('reviews')}>
+            <span>📰</span> 전문가 리뷰
+          </button>
           <div className={s.sbGroupLabel}>사용자</div>
           <button className={`${s.sbItem} ${page === 'journalists' ? s.sbActive : ''}`} onClick={() => setPage('journalists')}>
             <span>✍️</span> 기자 계정 관리
@@ -383,7 +389,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
             <span className={s.crumbSep}>/</span>
             <span className={s.crumbPage}>
               {{ dashboard: '대시보드', games: '게임 목록', add: '게임 등록',
-                 featured: '메인 노출 설정', journalists: '기자 계정 관리', reports: '리뷰 신고' }[page]}
+                 featured: '메인 노출 설정', reviews: '전문가 리뷰', journalists: '기자 계정 관리', reports: '리뷰 신고' }[page]}
             </span>
           </div>
           <div className={s.topbarRight}>
@@ -706,6 +712,15 @@ export default function AdminClient({ initGames, initJournalists, initReports, f
                 </div>
               </div>
             </div>
+          )}
+
+          {page === 'reviews' && (
+            <CriticReviewsPanel
+              games={games}
+              reviews={criticReviews}
+              setReviews={setCriticReviews}
+              showToast={showToast}
+            />
           )}
 
           {/* ── 메인 노출 설정 ── */}

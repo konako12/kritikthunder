@@ -21,3 +21,22 @@ export function formatDate(dateStr: string): string {
 export function initial(name: string): string {
   return name[0] ?? '?'
 }
+
+/** 원문 링크 검증 — 비어 있으면 통과, 아니면 http(s):// 주소만 허용 */
+export function isValidSourceUrl(url: string): boolean {
+  const v = url.trim()
+  if (!v) return true
+  if (!/^https?:\/\/\S+$/i.test(v)) return false
+  try { new URL(v); return true } catch { return false }
+}
+
+/** 입력값 → DB 저장값 (빈 문자열은 null) */
+export function normalizeSourceUrl(url: string | null | undefined): string | null {
+  const v = (url ?? '').trim()
+  return v ? v : null
+}
+
+/** 출처 도메인 (예: https://www.gamemeca.com/view.php → gamemeca.com) */
+export function sourceDomain(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, '') } catch { return '' }
+}

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
+import { requireAdmin } from '@/lib/admin-auth'
 
 // PATCH /api/admin/settings — 설정 변경 (메인 노출 게임 등)
 export async function PATCH(req: NextRequest) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const supabase = createAdminClient()
   const { key, value } = await req.json()
 

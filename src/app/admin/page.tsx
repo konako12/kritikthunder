@@ -19,11 +19,12 @@ export default async function AdminPage() {
 
   const supabase = createAdminClient()
 
-  const [gamesRes, journalistsRes, reportsRes, settingsRes] = await Promise.all([
+  const [gamesRes, journalistsRes, reportsRes, settingsRes, criticRes] = await Promise.all([
     supabase.from('games').select('*').order('created_at', { ascending: false }),
     supabase.from('journalists').select('*').order('joined_at', { ascending: false }),
     supabase.from('reports').select('*').eq('status', 'pending').order('created_at', { ascending: false }),
     supabase.from('settings').select('*'),
+    supabase.from('critic_reviews').select('*').order('published_at', { ascending: false }),
   ])
 
   const featuredId = Number(
@@ -35,6 +36,7 @@ export default async function AdminPage() {
       initGames={gamesRes.data ?? []}
       initJournalists={journalistsRes.data ?? []}
       initReports={reportsRes.data ?? []}
+      initCriticReviews={criticRes.data ?? []}
       featuredGameId={featuredId}
     />
   )

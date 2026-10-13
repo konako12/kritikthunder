@@ -256,3 +256,19 @@
   .scoreBand { flex-wrap: wrap; }
   .hero { height: 340px; }
 }
+
+/* ── 원문 링크 ── */
+.reviewFoot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; margin-top: 0.7rem;
+}
+.reviewFoot .reviewDate { margin-top: 0; }
+.sourceLink {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.7rem; border-radius: 4px;
+  border: 1px solid var(--border-hi, rgba(255,255,255,0.16));
+  font-size: 0.72rem; font-weight: 600; color: var(--gold);
+  transition: background 0.15s, border-color 0.15s;
+}
+.sourceLink:hover { background: var(--gold-dim); border-color: rgba(245,200,66,0.4); }
+.sourceDomain { font-family: 'DM Mono', monospace; font-weight: 400; color: var(--text-muted); }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Journalist } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
+import { isValidSourceUrl, normalizeSourceUrl, sourceDomain } from '@/lib/utils'
 import s from './cms.module.css'
 
 interface GameBasic {
@@ -22,6 +23,7 @@ interface CriticReviewRow {
   reviewer_name: string
   score: number
   review_text: string
+  source_url: string | null
   published_at: string
 }
 
@@ -53,6 +55,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   const [gameDropOpen, setGameDropOpen] = useState(false)
   const [score, setScore] = useState('')
   const [reviewText, setReviewText] = useState('')
+  const [sourceUrl, setSourceUrl] = useState('')
   const [publishDate, setPublishDate] = useState(new Date().toISOString().slice(0, 10))
   const [submitting, setSubmitting] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
@@ -63,6 +66,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   const [editScore, setEditScore] = useState('')
   const [editText, setEditText] = useState('')
   const [editDate, setEditDate] = useState('')
+  const [editSourceUrl, setEditSourceUrl] = useState('')
   const [editSubmitting, setEditSubmitting] = useState(false)
 
   const scoreNum = Number(score)
@@ -83,6 +87,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
     if (!selGame) { setErrorMsg('게임을 선택해주세요'); return }
     if (!score || scoreNum < 0 || scoreNum > 100) { setErrorMsg('점수를 0~100 사이로 입력해주세요'); return }
     if (reviewText.trim().length < 50) { setErrorMsg('리뷰를 50자 이상 입력해주세요'); return }
+    if (!isValidSourceUrl(sourceUrl)) { setErrorMsg('원문 링크는 http:// 또는 https://로 시작해야 해요'); return }
 
     setSubmitting(true)
     setErrorMsg('')
@@ -96,6 +101,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
         reviewer_name: journalist.name,
         score: scoreNum,
         review_text: reviewText.trim(),
+        source_url: normalizeSourceUrl(sourceUrl),
         published_at: publishDate,
       })
       .select()
@@ -112,6 +118,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
     setSelGame(null)
     setScore('')
     setReviewText('')
+    setSourceUrl('')
     setPublishDate(new Date().toISOString().slice(0, 10))
     setTimeout(() => setSuccessMsg(''), 4000)
   }
@@ -122,6 +129,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
     setEditScore(String(r.score))
     setEditText(r.review_text)
     setEditDate(r.published_at)
+    setEditSourceUrl(r.source_url ?? '')
   }
 
   // ── 수정 저장
@@ -129,12 +137,18 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
     const n = Number(editScore)
     if (!editScore || n < 0 || n > 100) { alert('점수를 0~100 사이로 입력해주세요'); return }
     if (editText.trim().length < 50) { alert('리뷰를 50자 이상 입력해주세요'); return }
+    if (!isValidSourceUrl(editSourceUrl)) { alert('원문 링크는 http:// 또는 https://로 시작해야 해요'); return }
 
     setEditSubmitting(true)
     const supabase = createClient()
     const { data, error } = await supabase
       .from('critic_reviews')
-      .update({ score: n, review_text: editText.trim(), published_at: editDate })
+      .update({
+        score: n,
+        review_text: editText.trim(),
+        published_at: editDate,
+        source_url: normalizeSourceUrl(editSourceUrl),
+      })
       .eq('id', reviewId)
       .select()
       .single()
@@ -343,6 +357,23 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                   />
                 </div>
 
+                {/* 원문 기사 링크 */}
+                <div className={s.formCard}>
+                  <div className={s.formCardTitle}>
+                    원문 기사 링크 <span className={s.charCount}>선택 · 나중에 추가해도 돼요</span>
+                  </div>
+                  <input
+                    type="url"
+                    className={s.formInput}
+                    value={sourceUrl}
+                    onChange={(e) => setSourceUrl(e.target.value)}
+                    placeholder="https://www.gamemeca.com/view.php?..."
+                  />
+                  {!isValidSourceUrl(sourceUrl) && (
+                    <div className={s.fieldError}>http:// 또는 https://로 시작하는 주소를 입력해주세요</div>
+                  )}
+                </div>
+
                 <button className={s.submitBtn} onClick={submitReview} disabled={submitting}>
                   {submitting ? '등록 중...' : '리뷰 게재하기'}
                 </button>
@@ -447,6 +478,18 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                           />
                         </div>
 
+                        <div className={s.editField}>
+                          <label className={s.editLabel}>원문 기사 링크 (선택)</label>
+                          <input
+                            type="url" className={s.formInput}
+                            value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)}
+                            placeholder="https://..."
+                          />
+                          {!isValidSourceUrl(editSourceUrl) && (
+                            <div className={s.fieldError}>http:// 또는 https://로 시작하는 주소를 입력해주세요</div>
+                          )}
+                        </div>
+
                         <button
                           className={s.saveEditBtn}
                           onClick={() => saveEdit(r.id)}
@@ -489,6 +532,15 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                           </div>
                         </div>
                         <div className={s.myRText}>{r.review_text}</div>
+                        <div className={s.myRSource}>
+                          {r.source_url ? (
+                            <a href={r.source_url} target="_blank" rel="noopener noreferrer">
+                              원문 보기 ↗ <span className={s.myRSourceDomain}>{sourceDomain(r.source_url)}</span>
+                            </a>
+                          ) : (
+                            <button className={s.addLinkBtn} onClick={() => startEdit(r)}>+ 원문 링크 추가</button>
+                          )}
+                        </div>
                       </>
                     )}
                   </div>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/admin-auth'
 
 // ── Twitch 토큰 인-프로세스 캐시 (만료 1분 전 갱신) ──────────────
 let tokenCache: { token: string; expiresAt: number } | null = null
@@ -85,6 +86,9 @@ function mapGenres(genres: { id: number }[]): string | null {
 
 // ── GET /api/igdb/search?q=... ──────────────────────────────────────
 export async function GET(req: NextRequest) {
+  const denied = await requireAdmin()
+  if (denied) return denied
+
   const q = req.nextUrl.searchParams.get('q')?.trim()
   if (!q) return NextResponse.json({ results: [] })
 

@@ -253,6 +253,19 @@
 .csBad { background: var(--score-bad); color: #fff; }
 .myRText { font-size: 0.82rem; line-height: 1.7; color: var(--text-sub-light); }
 
+/* ── 원문 링크 ── */
+.myRSource { margin-top: 0.6rem; font-size: 0.75rem; }
+.myRSource a { color: var(--blue); font-weight: 600; }
+.myRSource a:hover { text-decoration: underline; }
+.myRSourceDomain { color: var(--text-muted-light); font-weight: 400; margin-left: 0.3rem; }
+.addLinkBtn {
+  background: none; border: 1px dashed var(--border-hi-light); border-radius: 5px;
+  padding: 0.25rem 0.6rem; font-size: 0.72rem; color: var(--text-sub-light);
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.addLinkBtn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+.fieldError { margin-top: 0.4rem; font-size: 0.72rem; color: var(--red-admin); }
+
 /* ── 수정/삭제 버튼 ── */
 .reviewActions { display: flex; gap: 0.3rem; }
 .editBtn, .deleteBtn {
