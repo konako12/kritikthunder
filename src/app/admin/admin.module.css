@@ -636,3 +636,18 @@
 .heroFocusBtnOn { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); font-weight: 600; }
 .heroFocusRange { flex: 1; min-width: 100px; margin-left: 0.4rem; accent-color: var(--blue); }
 .heroFocusVal { font-size: 0.72rem; color: var(--text-muted-light); min-width: 2.6rem; text-align: right; }
+
+/* ── 전문가 리뷰 한줄평 ── */
+.quoteGuide {
+  font-size: 0.72rem; line-height: 1.5; color: var(--orange); background: var(--orange-bg);
+  border: 1px solid var(--orange-border); border-radius: 6px; padding: 0.4rem 0.6rem; margin-bottom: 0.4rem;
+}
+.verdictCount { margin-left: auto; float: right; font-size: 0.7rem; font-weight: 500; color: var(--text-muted-light); font-family: 'DM Mono', monospace; }
+.verdictCountOver { color: var(--red-admin); font-weight: 700; }
+.verdictOwn { font-size: 0.8rem; line-height: 1.5; margin-top: 4px; color: var(--text-dark); }
+.verdictQuote {
+  font-size: 0.8rem; line-height: 1.5; margin-top: 4px; color: var(--text-dark);
+  border-left: 3px solid var(--blue-border); padding-left: 0.5rem; font-style: italic;
+}
+.rowHidden td { opacity: 0.5; }
+.rowHidden td:last-child { opacity: 1; }

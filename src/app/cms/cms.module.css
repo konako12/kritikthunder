@@ -357,3 +357,29 @@
   .formCard { padding: 1.1rem 1rem; }
   .profileCard { padding: 1.8rem 1.2rem; }
 }
+
+/* ── 한줄평 ── */
+.verdictGuide {
+  font-size: 0.78rem; color: var(--blue, #2563eb); background: var(--blue-bg, #eff6ff);
+  border: 1px solid var(--blue-border, #bfdbfe); border-radius: 6px;
+  padding: 0.45rem 0.7rem; margin-bottom: 0.55rem; line-height: 1.5;
+}
+.verdictTextarea {
+  width: 100%; resize: vertical; min-height: 64px; font-family: inherit;
+  font-size: 0.95rem; font-weight: 500; line-height: 1.6;
+  padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid var(--border-light, #e5e7ef);
+  background: var(--surface, #fff); color: inherit;
+}
+.verdictTextarea:focus { outline: none; border-color: var(--blue, #2563eb); }
+.charOver { color: var(--red-admin, #dc2626) !important; font-weight: 700; }
+.previewVerdict { font-size: 0.85rem; font-weight: 500; line-height: 1.6; margin: 0.8rem 0 0.5rem; }
+.previewLink { font-size: 0.75rem; font-weight: 600; color: var(--gold-admin, #d4a800); margin-bottom: 0.4rem; }
+.myRVerdict { font-size: 0.9rem; font-weight: 600; line-height: 1.6; margin: 0.6rem 0 0.4rem; }
+.noVerdict {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  font-size: 0.78rem; color: var(--orange, #ea580c); margin: 0.6rem 0 0.4rem;
+}
+.hiddenNote {
+  font-size: 0.78rem; line-height: 1.5; color: var(--red-admin, #dc2626); background: var(--red-bg, #fef2f2);
+  border: 1px solid var(--red-border, #fecaca); border-radius: 6px; padding: 0.45rem 0.7rem; margin-top: 0.6rem;
+}

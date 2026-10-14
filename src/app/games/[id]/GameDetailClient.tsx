@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import type { Game, CriticReview, UserReview, NewsWithGame } from '@/lib/types'
 import { scoreClass, formatDate, initial, sourceDomain } from '@/lib/utils'
+import { ReviewVerdict, FullReviewLink } from '@/components/review/ReviewVerdict'
 import { createClient } from '@/lib/supabase-client'
 import { platformLabels } from '@/lib/platforms'
 import NewsCard from '@/components/news/NewsCard'
@@ -22,10 +23,6 @@ type Tab = 'critic' | 'user' | 'write'
 
 export default function GameDetailClient({ game, criticReviews, userReviews: initUserReviews, avgStars: initAvgStars, news }: Props) {
   const [tab, setTab] = useState<Tab>('critic')
-  // 전문가 리뷰 본문은 3줄까지 보여주고, 긴 리뷰는 "더 보기"로 펼침
-  const [expanded, setExpanded] = useState<Set<number>>(new Set())
-  const toggleExpand = (id: number) =>
-    setExpanded((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
   const [userReviews, setUserReviews] = useState(initUserReviews)
   const [avgStars, setAvgStars] = useState(initAvgStars)
 
@@ -203,7 +200,6 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
                   <div className={s.emptyMsg}>아직 전문가 리뷰가 없습니다.</div>
                 )}
                 {criticReviews.map((r) => {
-                  const open = expanded.has(r.id)
                   return (
                     <article key={r.id} className={s.reviewCard}>
                       {/* 위: 점수(가장 크게) + 매체명 / 기자명 */}
@@ -216,19 +212,15 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
                           <span className={s.reviewerName}>{r.reviewer_name}</span>
                         </div>
                       </div>
-                      {/* 가운데: 본문 (3줄, 길면 더 보기) */}
-                      <p className={`${s.reviewText} ${open ? '' : s.reviewTextClamp}`}>{r.review_text}</p>
-                      {r.review_text.length > 120 && (
-                        <button className={s.moreBtn} onClick={() => toggleExpand(r.id)}>{open ? '접기' : '더 보기'}</button>
-                      )}
-                      {/* 아래: 날짜 + 원문 보기 */}
+                      {/* 가운데: 한줄평 (기자 본인 문장) — 없으면 전문 2줄 */}
+                      <div className={s.reviewText}><ReviewVerdict review={r} size="lg" /></div>
+                      {/* 아래: 날짜 + 전문 링크 (원문 또는 KRITIK 리뷰 상세) */}
                       <div className={s.reviewFoot}>
                         <span className={s.reviewDate}>{r.published_at.replaceAll('-', '.')}</span>
-                        {r.source_url && (
-                          <a href={r.source_url} target="_blank" rel="noopener noreferrer" className={s.sourceLink}>
-                            원문 보기 ↗ <span className={s.sourceDomain}>{sourceDomain(r.source_url)}</span>
-                          </a>
-                        )}
+                        <span className={s.reviewLinks}>
+                          {r.source_url && <span className={s.sourceDomain}>{sourceDomain(r.source_url)}</span>}
+                          <FullReviewLink review={r} className={s.sourceLink} />
+                        </span>
                       </div>
                     </article>
                   )

@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { pickReviewFields } from './validate'
 
-// POST /api/admin/critic-reviews — 외부 매체 리뷰 직접 등록
+// POST /api/admin/critic-reviews — 외부 매체 리뷰 등록 (원문 인용 문장 + 원문 링크 필수)
 export async function POST(req: NextRequest) {
   const denied = await requireAdmin()
   if (denied) return denied
@@ -18,6 +18,11 @@ export async function POST(req: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  if (error) {
+    const msg = /verdict/.test(error.message) && /column/.test(error.message)
+      ? '한줄평 칸이 아직 없어요. supabase/migrations/012_critic_review_verdict.sql을 먼저 실행해주세요.'
+      : error.message
+    return NextResponse.json({ error: msg }, { status: 400 })
+  }
   return NextResponse.json(data, { status: 201 })
 }

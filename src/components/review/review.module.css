@@ -1,0 +1,28 @@
+/* 전문가 리뷰 한줄평 — 메인 · 게임 상세 · 리뷰 상세 공용 */
+.md { font-size: 0.9375rem; }
+.lg { font-size: 1rem; }
+
+/* 기자가 직접 쓴 한줄평 */
+.own {
+  margin: 0; font-weight: 500; line-height: 1.7; color: var(--text-body, #d6dbe5);
+  word-break: keep-all; overflow-wrap: break-word;
+}
+
+/* 원문 인용 — 따옴표 + 왼쪽 선 */
+.quote {
+  position: relative; margin: 0;
+  padding: 0.1rem 0 0.1rem 1.05rem; border-left: 3px solid rgba(245,200,66,0.55);
+}
+.quote p {
+  margin: 0; font-weight: 500; line-height: 1.7; color: var(--text-body, #d6dbe5);
+  word-break: keep-all; overflow-wrap: break-word;
+}
+.quote p::before { content: '“'; color: var(--gold, #f5c842); font-weight: 700; margin-right: 0.1em; }
+.quote p::after { content: '”'; color: var(--gold, #f5c842); font-weight: 700; margin-left: 0.1em; }
+.quoteNote { display: block; margin-top: 0.3rem; font-size: 0.75rem; color: var(--text-meta, #939bb0); }
+
+/* 한줄평 없는 기존 리뷰 — 전문 2줄 */
+.fallback {
+  margin: 0; font-weight: 400; line-height: 1.7; color: var(--text-body, #d6dbe5);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}

@@ -25,13 +25,14 @@ export default async function CmsPage() {
   if (!journalist) redirect('/no-access')
 
   // ── 3. 이 기자의 리뷰 목록 (서버에서 미리 로드)
+  //    관리자가 숨긴 리뷰도 본인에게는 보여야 해서 service_role로 조회 (공개 읽기 정책은 숨긴 리뷰 제외)
   const [gamesRes, reviewsRes] = await Promise.all([
     supabase
       .from('games')
       .select('id,title,title_original,cover_url,developer,year')
       .eq('status', 'published')
       .order('title'),
-    supabase
+    createAdminClient()
       .from('critic_reviews')
       .select('*')
       .eq('reviewer_name', journalist.name)

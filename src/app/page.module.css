@@ -351,12 +351,8 @@
 .rcWho { min-width: 0; }
 .rcMedia { font-size: 0.875rem; font-weight: 700; color: var(--text); line-height: 1.35; }
 .rcName { font-size: 0.8125rem; color: var(--text-meta); margin-top: 0.15rem; }
-.rcText {
-  font-size: 0.9375rem; font-weight: 400; color: var(--text-body); line-height: 1.7;
-  margin: 1rem 0 1.1rem; flex: 1;
-  /* 최대 3줄, 넘치면 말줄임표 */
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
+/* 한줄평 자리 — 카드 높이를 맞추려고 남는 공간을 차지 */
+.rcText { margin: 1rem 0 1.1rem; flex: 1; min-width: 0; }
 .rcFoot { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .rcDate { font-size: 0.8125rem; color: var(--text-meta); }
 .rcSource { font-size: 0.8125rem; font-weight: 600; color: var(--gold); white-space: nowrap; }

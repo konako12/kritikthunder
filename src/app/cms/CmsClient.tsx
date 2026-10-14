@@ -7,6 +7,7 @@ import type { Journalist } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
 import ChangePasswordForm from '@/components/ChangePasswordForm'
 import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, sourceDomain, SCORE_DISPLAY_MAX, gameTitleMatches } from '@/lib/utils'
+import { VERDICT_MAX, verdictError, verdictLength } from '@/lib/review-verdict'
 import s from './cms.module.css'
 
 interface GameBasic {
@@ -24,10 +25,32 @@ interface CriticReviewRow {
   media: string
   reviewer_name: string
   score: number
-  review_text: string
+  review_text: string | null
   source_url: string | null
   score_display: string | null
+  verdict?: string | null
+  verdict_type?: 'own' | 'quote' | null
+  is_hidden?: boolean
   published_at: string
+}
+
+const VERDICT_GUIDE = '리뷰의 핵심 판단을 한 문장으로 직접 작성해주세요'
+const BODY_MIN = 50
+
+/** 한줄평 · 원문 링크 · 전문 검증 — 문제가 없으면 null */
+function checkContent(verdict: string, sourceUrl: string, body: string): string | null {
+  const vErr = verdictError(verdict)
+  if (vErr) return vErr
+  if (!isValidSourceUrl(sourceUrl)) return '원문 링크는 http:// 또는 https://로 시작해야 해요'
+  if (!sourceUrl.trim() && body.trim().length < BODY_MIN) return `원문 링크가 없으면 전문을 ${BODY_MIN}자 이상 입력해주세요`
+  return null
+}
+
+/** DB 오류 메시지 — 한줄평 칸이 아직 없으면 안내로 */
+function dbError(message: string): string {
+  return /verdict/.test(message) && /column/.test(message)
+    ? '한줄평 기능 준비 중이에요. 관리자에게 문의해주세요. (SQL 012 미적용)'
+    : message
 }
 
 interface Props {
@@ -57,6 +80,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   const [gameSearch, setGameSearch] = useState('')
   const [gameDropOpen, setGameDropOpen] = useState(false)
   const [score, setScore] = useState('')
+  const [verdict, setVerdict] = useState('')
   const [reviewText, setReviewText] = useState('')
   const [sourceUrl, setSourceUrl] = useState('')
   const [scoreDisplay, setScoreDisplay] = useState('')
@@ -68,6 +92,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   // ── 리뷰 수정 상태
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editScore, setEditScore] = useState('')
+  const [editVerdict, setEditVerdict] = useState('')
   const [editText, setEditText] = useState('')
   const [editDate, setEditDate] = useState('')
   const [editSourceUrl, setEditSourceUrl] = useState('')
@@ -91,8 +116,8 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   async function submitReview() {
     if (!selGame) { setErrorMsg('게임을 선택해주세요'); return }
     if (!score || scoreNum < 0 || scoreNum > 100) { setErrorMsg('점수를 0~100 사이로 입력해주세요'); return }
-    if (reviewText.trim().length < 50) { setErrorMsg('리뷰를 50자 이상 입력해주세요'); return }
-    if (!isValidSourceUrl(sourceUrl)) { setErrorMsg('원문 링크는 http:// 또는 https://로 시작해야 해요'); return }
+    const contentErr = checkContent(verdict, sourceUrl, reviewText)
+    if (contentErr) { setErrorMsg(contentErr); return }
 
     setSubmitting(true)
     setErrorMsg('')
@@ -105,7 +130,9 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
         media: journalist.media,
         reviewer_name: journalist.name,
         score: scoreNum,
-        review_text: reviewText.trim(),
+        verdict: verdict.trim(),
+        verdict_type: 'own', // 기자 한줄평은 항상 직접 작성
+        review_text: reviewText.trim() || null,
         source_url: normalizeSourceUrl(sourceUrl),
         // 원래 점수 표기는 입력했을 때만 전송
         ...(normalizeScoreDisplay(scoreDisplay) && { score_display: normalizeScoreDisplay(scoreDisplay) }),
@@ -116,7 +143,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
 
     setSubmitting(false)
 
-    if (error) { setErrorMsg(error.message); return }
+    if (error) { setErrorMsg(dbError(error.message)); return }
 
     // 로컬 상태 업데이트 (트리거가 DB의 critic_score + review_count 자동 갱신)
     setMyReviews((prev) => [data, ...prev])
@@ -124,6 +151,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
     setSuccessMsg(`✅ "${selGame.title}" 리뷰가 등록됐습니다. 메타스코어가 자동 업데이트됩니다.`)
     setSelGame(null)
     setScore('')
+    setVerdict('')
     setReviewText('')
     setSourceUrl('')
     setScoreDisplay('')
@@ -135,7 +163,8 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   function startEdit(r: CriticReviewRow) {
     setEditingId(r.id)
     setEditScore(String(r.score))
-    setEditText(r.review_text)
+    setEditVerdict(r.verdict ?? '')
+    setEditText(r.review_text ?? '')
     setEditDate(r.published_at)
     setEditSourceUrl(r.source_url ?? '')
     setEditScoreDisplay(r.score_display ?? '')
@@ -145,8 +174,8 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   async function saveEdit(reviewId: number) {
     const n = Number(editScore)
     if (!editScore || n < 0 || n > 100) { alert('점수를 0~100 사이로 입력해주세요'); return }
-    if (editText.trim().length < 50) { alert('리뷰를 50자 이상 입력해주세요'); return }
-    if (!isValidSourceUrl(editSourceUrl)) { alert('원문 링크는 http:// 또는 https://로 시작해야 해요'); return }
+    const contentErr = checkContent(editVerdict, editSourceUrl, editText)
+    if (contentErr) { alert(contentErr); return }
 
     setEditSubmitting(true)
     const supabase = createClient()
@@ -154,7 +183,9 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
       .from('critic_reviews')
       .update({
         score: n,
-        review_text: editText.trim(),
+        verdict: editVerdict.trim(),
+        verdict_type: 'own',
+        review_text: editText.trim() || null,
         published_at: editDate,
         source_url: normalizeSourceUrl(editSourceUrl),
         ...((normalizeScoreDisplay(editScoreDisplay) || myReviews.find((x) => x.id === reviewId)?.score_display)
@@ -166,7 +197,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
 
     setEditSubmitting(false)
 
-    if (error) { alert(error.message); return }
+    if (error) { alert(dbError(error.message)); return }
 
     setMyReviews((prev) => prev.map((r) => (r.id === reviewId ? data : r)))
     setEditingId(null)
@@ -352,16 +383,54 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                   />
                 </div>
 
-                {/* 리뷰 텍스트 */}
+                {/* 한줄평 */}
                 <div className={s.formCard}>
                   <div className={s.formCardTitle}>
-                    리뷰 본문 * <span className={s.charCount}>{reviewText.length}자</span>
+                    한줄평 *
+                    <span className={`${s.charCount} ${verdictLength(verdict) > VERDICT_MAX ? s.charOver : ''}`}>
+                      {verdictLength(verdict)} / {VERDICT_MAX}자
+                    </span>
+                  </div>
+                  <div className={s.verdictGuide}>{VERDICT_GUIDE}</div>
+                  <textarea
+                    className={s.verdictTextarea}
+                    value={verdict}
+                    onChange={(e) => setVerdict(e.target.value)}
+                    placeholder="예) 전투의 긴장감은 시리즈 최고지만, 후반부 이야기는 힘이 빠진다."
+                    rows={2}
+                  />
+                </div>
+
+                {/* 원문 기사 링크 */}
+                <div className={s.formCard}>
+                  <div className={s.formCardTitle}>
+                    원문 기사 링크 <span className={s.charCount}>선택 · 있으면 카드의 "전문 읽기"가 원문으로 연결돼요</span>
+                  </div>
+                  <input
+                    type="url"
+                    className={s.formInput}
+                    value={sourceUrl}
+                    onChange={(e) => setSourceUrl(e.target.value)}
+                    placeholder="https://..."
+                  />
+                  {!isValidSourceUrl(sourceUrl) && (
+                    <div className={s.fieldError}>http:// 또는 https://로 시작하는 주소를 입력해주세요</div>
+                  )}
+                </div>
+
+                {/* 전문 */}
+                <div className={s.formCard}>
+                  <div className={s.formCardTitle}>
+                    전문 {sourceUrl.trim() ? <span className={s.charCount}>선택 · 원문 링크가 있어 비워도 돼요</span> : '*'}
+                    <span className={s.charCount}>{reviewText.length}자</span>
                   </div>
                   <textarea
                     className={s.reviewTextarea}
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
-                    placeholder="게임에 대한 전문적인 리뷰를 작성해주세요 (최소 50자)..."
+                    placeholder={sourceUrl.trim()
+                      ? '원문 기사가 있으면 비워도 돼요. 쓰면 KRITIK 리뷰 페이지에 함께 실립니다.'
+                      : `원문 링크가 없으면 필수예요. KRITIK 리뷰 페이지에 실릴 전문을 작성해주세요 (최소 ${BODY_MIN}자)...`}
                     rows={10}
                   />
                 </div>
@@ -376,23 +445,6 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                     onChange={(e) => setPublishDate(e.target.value)}
                     style={{ maxWidth: 200 }}
                   />
-                </div>
-
-                {/* 원문 기사 링크 */}
-                <div className={s.formCard}>
-                  <div className={s.formCardTitle}>
-                    원문 기사 링크 <span className={s.charCount}>선택 · 나중에 추가해도 돼요</span>
-                  </div>
-                  <input
-                    type="url"
-                    className={s.formInput}
-                    value={sourceUrl}
-                    onChange={(e) => setSourceUrl(e.target.value)}
-                    placeholder="https://..."
-                  />
-                  {!isValidSourceUrl(sourceUrl) && (
-                    <div className={s.fieldError}>http:// 또는 https://로 시작하는 주소를 입력해주세요</div>
-                  )}
                 </div>
 
                 <button className={s.submitBtn} onClick={submitReview} disabled={submitting}>
@@ -424,9 +476,10 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                       </div>
                     </div>
                   )}
-                  <div className={s.previewText}>
-                    {reviewText || <span style={{ opacity: 0.4 }}>리뷰 내용이 여기 표시됩니다...</span>}
+                  <div className={s.previewVerdict}>
+                    {verdict.trim() || <span style={{ opacity: 0.4 }}>한줄평이 여기 표시됩니다...</span>}
                   </div>
+                  <div className={s.previewLink}>{sourceUrl.trim() ? '전문 읽기 ↗' : '전문 보기'}</div>
                   <div className={s.previewDate}>{publishDate}</div>
                 </div>
               </div>
@@ -499,7 +552,26 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                         </div>
 
                         <div className={s.editField}>
-                          <label className={s.editLabel}>리뷰 본문 <span className={s.charCount}>{editText.length}자</span></label>
+                          <label className={s.editLabel}>
+                            한줄평 *{' '}
+                            <span className={`${s.charCount} ${verdictLength(editVerdict) > VERDICT_MAX ? s.charOver : ''}`}>
+                              {verdictLength(editVerdict)} / {VERDICT_MAX}자
+                            </span>
+                          </label>
+                          <div className={s.verdictGuide}>{VERDICT_GUIDE}</div>
+                          <textarea
+                            className={s.verdictTextarea}
+                            value={editVerdict}
+                            onChange={(e) => setEditVerdict(e.target.value)}
+                            rows={2}
+                          />
+                        </div>
+
+                        <div className={s.editField}>
+                          <label className={s.editLabel}>
+                            전문 {editSourceUrl.trim() ? '(원문 링크가 있어 선택)' : '* (원문 링크가 없으면 필수)'}{' '}
+                            <span className={s.charCount}>{editText.length}자</span>
+                          </label>
                           <textarea
                             className={s.reviewTextarea}
                             value={editText}
@@ -544,13 +616,15 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                             <div className={`${s.myRScore} ${cls}`}>{r.score}</div>
                             <div className={s.reviewActions}>
-                              <button
-                                className={s.editBtn}
-                                onClick={() => startEdit(r)}
-                                title="수정"
-                              >
-                                ✏️
-                              </button>
+                              {!r.is_hidden && (
+                                <button
+                                  className={s.editBtn}
+                                  onClick={() => startEdit(r)}
+                                  title="수정"
+                                >
+                                  ✏️
+                                </button>
+                              )}
                               <button
                                 className={s.deleteBtn}
                                 onClick={() => deleteReview(r.id, game?.title ?? `게임 #${r.game_id}`)}
@@ -561,13 +635,24 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                             </div>
                           </div>
                         </div>
-                        <div className={s.myRText}>{r.review_text}</div>
+                        {r.is_hidden && (
+                          <div className={s.hiddenNote}>관리자가 이 리뷰를 숨겼어요. 공개 화면과 점수 평균에서 빠져 있고, 수정할 수 없어요.</div>
+                        )}
+                        {r.verdict ? (
+                          <div className={s.myRVerdict}>{r.verdict}</div>
+                        ) : (
+                          <div className={s.noVerdict}>
+                            한줄평 없음 — 지금은 전문 앞부분이 대신 보여요.
+                            {!r.is_hidden && <button className={s.addLinkBtn} onClick={() => startEdit(r)}>+ 한줄평 쓰기</button>}
+                          </div>
+                        )}
+                        {r.review_text && <div className={s.myRText}>{r.review_text}</div>}
                         <div className={s.myRSource}>
                           {r.source_url ? (
                             <a href={r.source_url} target="_blank" rel="noopener noreferrer">
                               원문 보기 ↗ <span className={s.myRSourceDomain}>{sourceDomain(r.source_url)}</span>
                             </a>
-                          ) : (
+                          ) : !r.is_hidden && (
                             <button className={s.addLinkBtn} onClick={() => startEdit(r)}>+ 원문 링크 추가</button>
                           )}
                         </div>

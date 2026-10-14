@@ -158,18 +158,8 @@
 .csGreat { color: #fff; background: var(--score-great); }
 .csGood { color: #1a1a1a; background: var(--accent-gold); }
 .csBad { color: #fff; background: var(--score-bad); }
-.reviewText {
-  font-size: 1rem; font-weight: 400; line-height: 1.7; color: var(--text-body);
-  margin: 1.1rem 0 0;
-}
-.reviewTextClamp {
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.moreBtn {
-  margin-top: 0.4rem; padding: 0; background: none; border: none;
-  font-size: 0.8125rem; font-weight: 600; color: var(--text-meta);
-}
-.moreBtn:hover { color: var(--text); text-decoration: underline; }
+/* 한줄평 자리 */
+.reviewText { margin: 1.1rem 0 0; min-width: 0; }
 .reviewDate { font-size: 0.8125rem; color: var(--text-meta); }
 
 /* ── USER REVIEW ── */
@@ -283,7 +273,8 @@
   transition: background 0.15s, border-color 0.15s;
 }
 .sourceLink:hover { background: var(--gold-dim); border-color: rgba(245,200,66,0.4); }
-.sourceDomain { font-weight: 400; color: var(--text-meta); }
+.sourceDomain { font-size: 0.8125rem; font-weight: 400; color: var(--text-meta); }
+.reviewLinks { display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; }
 
 /* ── 관련 뉴스 ── */
 .newsSection { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border); }

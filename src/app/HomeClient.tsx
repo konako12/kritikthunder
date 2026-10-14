@@ -5,6 +5,7 @@ import Link from 'next/link'
 import AccountLinks from '@/components/AccountLinks'
 import type { Game, CriticReview, NewsWithGame } from '@/lib/types'
 import { scoreClass, sourceDomain, gameTitleMatches, formatReleaseDate } from '@/lib/utils'
+import { ReviewVerdict, FullReviewLink } from '@/components/review/ReviewVerdict'
 import { PLATFORM_GROUPS, inPlatformGroup, platformLabels, type PlatformGroup } from '@/lib/platforms'
 import type { Collection } from '@/lib/curation'
 import CollectionCard from './collections/CollectionCard'
@@ -289,15 +290,13 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
                       <div className={s.rcName}>{r.reviewer_name}</div>
                     </div>
                   </div>
-                  <p className={s.rcText}>{r.review_text}</p>
+                  {/* 한줄평 (기자 본인 문장) — 없으면 전문 2줄 */}
+                  <div className={s.rcText}><ReviewVerdict review={r} /></div>
                   <div className={s.rcFoot}>
                     <span className={s.rcDate}>{r.published_at.replaceAll('-', '.')}</span>
-                    {r.source_url && (
-                      <a href={r.source_url} target="_blank" rel="noopener noreferrer" className={s.rcSource}
-                        title={sourceDomain(r.source_url)}>
-                        원문 보기 ↗
-                      </a>
-                    )}
+                    <span title={r.source_url ? sourceDomain(r.source_url) : undefined}>
+                      <FullReviewLink review={r} className={s.rcSource} />
+                    </span>
                   </div>
                 </article>
               )

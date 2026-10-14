@@ -27,9 +27,17 @@ export interface CriticReview {
   media: string
   reviewer_name: string
   score: number
-  review_text: string
+  /** 전문 — 원문 링크가 없는 리뷰는 필수, 있으면 비어 있을 수 있음 (SQL 012) */
+  review_text: string | null
   source_url: string | null
   score_display: string | null
+  /** 한줄평 (100자) — 기자 본인의 문장. 기존 리뷰는 비어 있음 (SQL 012) */
+  verdict?: string | null
+  /** own: 기자가 CMS에서 직접 작성 · quote: 관리자가 원문 문장 인용 (SQL 012) */
+  verdict_type?: 'own' | 'quote' | null
+  /** 관리자가 숨긴 리뷰 — 공개 화면에서 빠짐 (SQL 012) */
+  is_hidden?: boolean
+  hidden_at?: string | null
   published_at: string
   created_at: string
 }
