@@ -6,11 +6,16 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import s from './login.module.css'
 
-export default function LoginClient() {
+interface Props {
+  notice?: string
+  initialError?: string
+}
+
+export default function LoginClient({ notice = '', initialError = '' }: Props) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(initialError)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -58,6 +63,7 @@ export default function LoginClient() {
         <div className={s.subtitle}>기자 · 관리자 로그인</div>
 
         <form className={s.form} onSubmit={handleSubmit}>
+          {notice && !error && <div className={s.notice}>{notice}</div>}
           <div className={s.field}>
             <label className={s.label}>이메일</label>
             <input
@@ -80,6 +86,11 @@ export default function LoginClient() {
               placeholder="••••••••"
               required
             />
+            <div className={s.forgotRow}>
+              <Link href="/forgot-password" className={s.forgotLink}>
+                비밀번호를 잊으셨나요?
+              </Link>
+            </div>
           </div>
 
           {error && <div className={s.error}>{error}</div>}

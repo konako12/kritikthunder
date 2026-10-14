@@ -3,14 +3,16 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { CriticReview, Game, Journalist, Report } from '@/lib/types'
+import type { CriticReview, Game, Journalist, News, Report } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
+import ChangePasswordForm from '@/components/ChangePasswordForm'
 import CriticReviewsPanel from './CriticReviewsPanel'
+import NewsPanel from './NewsPanel'
 import CollectionsPanel, { type CollectionSummary } from './CollectionsPanel'
 import type { CurationSettings } from '@/lib/curation'
 import s from './admin.module.css'
 
-type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'reviews' | 'collections' | 'journalists' | 'reports'
+type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'reviews' | 'news' | 'collections' | 'journalists' | 'reports' | 'account'
 
 interface IgdbResult {
   igdb_id: number
@@ -31,6 +33,7 @@ interface Props {
   initJournalists: Journalist[]
   initReports: Report[]
   initCriticReviews: CriticReview[]
+  initNews: News[]
   collections: CollectionSummary[]
   curationSettings: CurationSettings
   featuredGameId: number
@@ -56,13 +59,14 @@ function statusBadge(status: Game['status']) {
   return map[status]
 }
 
-export default function AdminClient({ initGames, initJournalists, initReports, initCriticReviews, collections, curationSettings, featuredGameId: initFeatId }: Props) {
+export default function AdminClient({ initGames, initJournalists, initReports, initCriticReviews, initNews, collections, curationSettings, featuredGameId: initFeatId }: Props) {
   const router = useRouter()
   const [page, setPage] = useState<Page>('dashboard')
   const [games, setGames] = useState<Game[]>(initGames)
   const [journalists, setJournalists] = useState<Journalist[]>(initJournalists)
   const [reports, setReports] = useState<Report[]>(initReports)
   const [criticReviews, setCriticReviews] = useState<CriticReview[]>(initCriticReviews)
+  const [news, setNews] = useState<News[]>(initNews)
   const [featuredId, setFeaturedId] = useState(initFeatId)
   const [tmpFeatId, setTmpFeatId] = useState(initFeatId)
 
@@ -355,7 +359,10 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
             <span>⭐</span> 메인 노출 설정
           </button>
           <button className={`${s.sbItem} ${page === 'reviews' ? s.sbActive : ''}`} onClick={() => setPage('reviews')}>
-            <span>📰</span> 전문가 리뷰
+            <span>📝</span> 전문가 리뷰
+          </button>
+          <button className={`${s.sbItem} ${page === 'news' ? s.sbActive : ''}`} onClick={() => setPage('news')}>
+            <span>📰</span> 뉴스 관리
           </button>
           <button className={`${s.sbItem} ${page === 'collections' ? s.sbActive : ''}`} onClick={() => setPage('collections')}>
             <span>🗂️</span> 컬렉션 관리
@@ -369,6 +376,10 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
           <button className={`${s.sbItem} ${page === 'reports' ? s.sbActive : ''}`} onClick={() => setPage('reports')}>
             <span>🚨</span> 리뷰 신고
             {reports.length > 0 && <span className={s.sbChip}>{reports.length}</span>}
+          </button>
+          <div className={s.sbGroupLabel}>계정</div>
+          <button className={`${s.sbItem} ${page === 'account' ? s.sbActive : ''}`} onClick={() => setPage('account')}>
+            <span>🔒</span> 비밀번호 변경
           </button>
         </nav>
         <div className={s.sbFooter}>
@@ -400,7 +411,8 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
             <span className={s.crumbSep}>/</span>
             <span className={s.crumbPage}>
               {{ dashboard: '대시보드', games: '게임 목록', add: '게임 등록',
-                 featured: '메인 노출 설정', reviews: '전문가 리뷰', collections: '컬렉션 관리', journalists: '기자 계정 관리', reports: '리뷰 신고' }[page]}
+                 featured: '메인 노출 설정', reviews: '전문가 리뷰', news: '뉴스 관리', collections: '컬렉션 관리', journalists: '기자 계정 관리', reports: '리뷰 신고',
+                 account: '비밀번호 변경' }[page]}
             </span>
           </div>
           <div className={s.topbarRight}>
@@ -735,6 +747,10 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
             <CollectionsPanel collections={collections} settings={curationSettings} showToast={showToast} />
           )}
 
+          {page === 'news' && (
+            <NewsPanel games={games} news={news} setNews={setNews} showToast={showToast} />
+          )}
+
           {page === 'reviews' && (
             <CriticReviewsPanel
               games={games}
@@ -883,6 +899,13 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* ── 비밀번호 변경 ── */}
+          {page === 'account' && (
+            <div style={{ maxWidth: 520 }}>
+              <ChangePasswordForm />
             </div>
           )}
         </div>

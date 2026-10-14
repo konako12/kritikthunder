@@ -122,12 +122,12 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
           <div className={s.formGrid}>
             <div className={s.formGroup}>
               <label className={s.formLabel}>매체명 <span className={s.req}>*</span></label>
-              <input className={s.formInput} value={media} onChange={(e) => setMedia(e.target.value)} placeholder="예) 게임메카" />
+              <input className={s.formInput} value={media} onChange={(e) => setMedia(e.target.value)} placeholder="매체명을 입력하세요" />
               {errors.media && <span className={s.formError}>{errors.media}</span>}
             </div>
             <div className={s.formGroup}>
               <label className={s.formLabel}>기자명 <span className={s.req}>*</span></label>
-              <input className={s.formInput} value={reviewer} onChange={(e) => setReviewer(e.target.value)} placeholder="예) 홍길동" />
+              <input className={s.formInput} value={reviewer} onChange={(e) => setReviewer(e.target.value)} placeholder="기자명을 입력하세요" />
               {errors.reviewer && <span className={s.formError}>{errors.reviewer}</span>}
             </div>
           </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Journalist } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
+import ChangePasswordForm from '@/components/ChangePasswordForm'
 import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, sourceDomain, SCORE_DISPLAY_MAX } from '@/lib/utils'
 import s from './cms.module.css'
 
@@ -387,7 +388,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                     className={s.formInput}
                     value={sourceUrl}
                     onChange={(e) => setSourceUrl(e.target.value)}
-                    placeholder="https://www.gamemeca.com/view.php?..."
+                    placeholder="https://..."
                   />
                   {!isValidSourceUrl(sourceUrl) && (
                     <div className={s.fieldError}>http:// 또는 https://로 시작하는 주소를 입력해주세요</div>
@@ -603,6 +604,9 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                     <span>가입일</span><span>{journalist.joined_at}</span>
                   </div>
                 </div>
+              </div>
+              <div style={{ marginTop: '1rem' }}>
+                <ChangePasswordForm />
               </div>
               <button className={s.profileLogoutBtn} onClick={handleLogout}>
                 로그아웃

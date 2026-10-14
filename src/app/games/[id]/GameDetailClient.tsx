@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import type { Game, CriticReview, UserReview } from '@/lib/types'
+import type { Game, CriticReview, UserReview, NewsWithGame } from '@/lib/types'
 import { scoreClass, formatDate, initial, sourceDomain } from '@/lib/utils'
 import { createClient } from '@/lib/supabase-client'
+import NewsCard from '@/components/news/NewsCard'
+import ns from '@/components/news/news.module.css'
 import s from './page.module.css'
 
 interface Props {
@@ -12,11 +14,12 @@ interface Props {
   criticReviews: CriticReview[]
   userReviews: UserReview[]
   avgStars: number
+  news: NewsWithGame[]
 }
 
 type Tab = 'critic' | 'user' | 'write'
 
-export default function GameDetailClient({ game, criticReviews, userReviews: initUserReviews, avgStars: initAvgStars }: Props) {
+export default function GameDetailClient({ game, criticReviews, userReviews: initUserReviews, avgStars: initAvgStars, news }: Props) {
   const [tab, setTab] = useState<Tab>('critic')
   const [userReviews, setUserReviews] = useState(initUserReviews)
   const [avgStars, setAvgStars] = useState(initAvgStars)
@@ -81,10 +84,10 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
         <Link href="/" className={s.logo}>KRIT<span>IK</span></Link>
         <nav>
           <Link href="/games">게임</Link>
-          <Link href="/reviews">리뷰</Link>
           <Link href="/rankings">랭킹</Link>
           <Link href="/collections">컬렉션</Link>
           <Link href="/releases">출시 일정</Link>
+          <Link href="/news">뉴스</Link>
         </nav>
       </header>
 
@@ -353,6 +356,19 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
             )}
           </div>
         </div>
+
+        {/* 관련 뉴스 — 최근 3개 */}
+        {news.length > 0 && (
+          <section className={s.newsSection}>
+            <div className={s.newsHead}>
+              <span className={s.newsTitle}>관련 뉴스</span>
+              <Link href="/news" className={s.newsMore}>전체 뉴스 →</Link>
+            </div>
+            <div className={`${ns.grid} ${ns.grid3}`}>
+              {news.map((n) => <NewsCard key={n.id} news={n} hideGameLink />)}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )

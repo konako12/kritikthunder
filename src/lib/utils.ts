@@ -36,7 +36,7 @@ export function normalizeSourceUrl(url: string | null | undefined): string | nul
   return v ? v : null
 }
 
-/** 출처 도메인 (예: https://www.gamemeca.com/view.php → gamemeca.com) */
+/** 출처 도메인 (예: https://www.example.com/view.php → example.com) */
 export function sourceDomain(url: string): string {
   try { return new URL(url).hostname.replace(/^www\./, '') } catch { return '' }
 }

@@ -62,3 +62,32 @@ export interface Report {
   reported_at: string
   created_at: string
 }
+
+export type NewsStatus = 'draft' | 'published' | 'hidden'
+export type NewsImageSource = 'original' | 'upload' | 'game_cover'
+
+export interface News {
+  id: number
+  title: string
+  media: string
+  source_url: string
+  summary: string | null
+  published_at: string | null
+  image_url: string | null
+  image_source: NewsImageSource | null
+  original_image_url: string | null
+  game_id: number | null
+  status: NewsStatus
+  is_pinned: boolean
+  sort_order: number
+  source_type: 'manual'
+  created_by: string | null
+  created_by_email: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** 공개 화면용 — 관련 게임 정보 포함 */
+export interface NewsWithGame extends News {
+  game: { id: number; title: string; cover_url: string | null } | null
+}

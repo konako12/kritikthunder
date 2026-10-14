@@ -68,6 +68,7 @@ export default function GamesClient({ games }: Props) {
           <Link href="/rankings">랭킹</Link>
           <Link href="/collections">컬렉션</Link>
           <Link href="/releases">출시 일정</Link>
+          <Link href="/news">뉴스</Link>
         </nav>
       </header>
 

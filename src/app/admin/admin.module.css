@@ -75,7 +75,7 @@
 .sbUserEmail { font-size: 0.65rem; color: var(--text-muted-light); }
 
 /* ── MAIN ── */
-.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+.main { margin-left: var(--sidebar-w); flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topbar {
   height: 60px; background: var(--surface); border-bottom: 1px solid var(--border-light);
   display: flex; align-items: center; justify-content: space-between;
@@ -191,9 +191,10 @@
   color: var(--text-muted-light); margin-bottom: 0.8rem;
   padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-light);
 }
-.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.formGrid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-.formGroup { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 1rem; }
+/* minmax(0, 1fr): 입력칸 기본 너비 때문에 칸이 카드 밖으로 밀리지 않게 */
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.formGrid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.formGroup { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 1rem; min-width: 0; }
 .formLabel { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-sub-light); }
 .req { color: var(--red-admin); margin-left: 2px; }
 .formInput {
@@ -251,7 +252,7 @@
 .platOn { background: var(--blue-bg); border-color: var(--blue-border) !important; color: var(--blue); font-weight: 700; }
 
 /* ── DASHBOARD GRID ── */
-.dashGrid { display: grid; grid-template-columns: 1fr 330px; gap: 1.5rem; }
+.dashGrid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 1.5rem; }
 .dashPending { padding: 0.5rem 1rem 1rem; }
 .pendingRow {
   display: flex; align-items: center; justify-content: space-between;
@@ -360,7 +361,7 @@
   display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px);
 }
 .confirmBox {
-  background: var(--surface); border-radius: 12px; padding: 2rem; width: 360px;
+  background: var(--surface); border-radius: 12px; padding: 2rem; width: 360px; max-width: calc(100vw - 32px);
   text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.12);
 }
 .confirmIcon { font-size: 2.5rem; margin-bottom: 0.8rem; }
@@ -399,7 +400,7 @@
 .igdbRow {
   display: flex; gap: 0.6rem;
 }
-.igdbRow input { flex: 1; }
+.igdbRow input { flex: 1; min-width: 0; }
 .igdbStatus {
   font-size: 0.75rem; color: var(--text-muted-light); margin-top: 0.6rem; text-align: center;
 }
@@ -467,10 +468,76 @@
 @media (max-width: 1100px) {
   .jGrid { grid-template-columns: 1fr 1fr; }
   .featGrid { grid-template-columns: repeat(3, 1fr); }
-  .dashGrid { grid-template-columns: 1fr; }
+  .dashGrid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 900px) {
   .sidebar { display: none; }
   .main { margin-left: 0; }
   .statRow { grid-template-columns: 1fr 1fr; }
 }
+@media (max-width: 600px) {
+  .topbar { padding: 0 1rem; }
+  .content { padding: 1.2rem 1rem; }
+  .cardBody { padding: 1.2rem 1rem; }
+  .modalBody { padding: 1.2rem 1rem; }
+  .formGrid, .formGrid3 { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .jGrid { grid-template-columns: 1fr; }
+}
+
+/* ── 뉴스 관리 ── */
+.newsNoticeOk, .newsNoticeWarn {
+  margin-top: 0.6rem; border-radius: 6px; padding: 0.55rem 0.85rem; font-size: 0.75rem; line-height: 1.5;
+}
+.newsNoticeOk { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green-admin); }
+.newsNoticeWarn { background: var(--orange-bg); border: 1px solid var(--orange-border); color: var(--orange); }
+.newsCount, .newsCountOver {
+  float: right; font-family: 'DM Mono', monospace; font-weight: 400; letter-spacing: 0; text-transform: none;
+}
+.newsCount { color: var(--text-muted-light); }
+.newsCountOver { color: var(--red-admin); font-weight: 700; }
+
+.newsGameSel {
+  display: flex; align-items: center; gap: 0.7rem;
+  background: var(--blue-bg); border: 1px solid var(--blue-border); border-radius: 8px; padding: 0.55rem 0.8rem;
+}
+.newsGameSearch { position: relative; }
+.newsGameDrop {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20;
+  background: var(--surface); border: 1px solid var(--border-light); border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1); overflow: hidden; max-height: 320px; overflow-y: auto;
+}
+.newsGameItem {
+  display: flex; align-items: center; gap: 0.7rem; width: 100%; padding: 0.55rem 0.85rem;
+  background: none; border: none; border-bottom: 1px solid var(--border-light); text-align: left;
+}
+.newsGameItem:last-child { border-bottom: none; }
+.newsGameItem:hover { background: var(--bg-light); }
+
+.newsImgRow { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+.newsImgBox {
+  width: 240px; max-width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden;
+  border: 1.5px solid var(--border-light); background: #12161f; flex-shrink: 0;
+}
+.newsImg { width: 100%; height: 100%; object-fit: cover; }
+.newsImgSide { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.5rem; }
+.newsImgMenu {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  padding: 0.75rem; border: 1px dashed var(--border-hi-light); border-radius: 8px; background: var(--surface2);
+}
+.newsThumb { width: 64px; height: 36px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: #12161f; }
+
+.newsPreview {
+  background: #06080c; border-radius: 10px; padding: 1.2rem; margin: 0.5rem 0 1rem;
+}
+.newsPreviewLabel {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #7a8399; margin-bottom: 0.8rem;
+}
+
+.newsTabs { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.newsTab {
+  padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--border-light); color: var(--text-sub-light);
+}
+.newsTab:hover { border-color: var(--border-hi-light); }
+.newsTabOn { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue); }

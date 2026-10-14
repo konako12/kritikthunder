@@ -87,7 +87,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
             <Link href="/rankings" className={s.navActive}>랭킹</Link>
             <Link href="/collections">컬렉션</Link>
             <Link href="/releases">출시 일정</Link>
-            <Link href="/reviews">리뷰</Link>
+            <Link href="/news">뉴스</Link>
           </nav>
         </div>
       </header>

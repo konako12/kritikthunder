@@ -272,3 +272,10 @@
 }
 .sourceLink:hover { background: var(--gold-dim); border-color: rgba(245,200,66,0.4); }
 .sourceDomain { font-family: 'DM Mono', monospace; font-weight: 400; color: var(--text-muted); }
+
+/* ── 관련 뉴스 ── */
+.newsSection { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.newsHead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1rem; }
+.newsTitle { font-size: 1.15rem; font-weight: 800; }
+.newsMore { font-size: 0.75rem; color: var(--text-muted); }
+.newsMore:hover { color: var(--gold); }

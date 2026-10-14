@@ -129,7 +129,7 @@ export default function RegisterClient() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="홍길동"
+                placeholder="이름을 입력하세요"
                 required
               />
             </div>
@@ -140,7 +140,7 @@ export default function RegisterClient() {
                 type="text"
                 value={media}
                 onChange={(e) => setMedia(e.target.value)}
-                placeholder="게임메카, IGN Korea 등"
+                placeholder="소속 매체명을 입력하세요"
                 required
               />
             </div>

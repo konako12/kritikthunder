@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import type { Game, CriticReview } from '@/lib/types'
+import type { Game, CriticReview, NewsWithGame } from '@/lib/types'
 import { scoreClass, sourceDomain } from '@/lib/utils'
 import type { Collection } from '@/lib/curation'
 import CollectionCard from './collections/CollectionCard'
 import HeroAccolades from './HeroAccolades'
+import NewsCard from '@/components/news/NewsCard'
 import cs from './collections/collections.module.css'
+import ns from '@/components/news/news.module.css'
 import s from './page.module.css'
 
 interface Props {
@@ -19,9 +21,10 @@ interface Props {
   upcoming: { title: string; developer: string; cover_url: string | null; year: number }[]
   allGames: Game[]
   collections: Collection[]
+  news: NewsWithGame[]
 }
 
-export default function HomeClient({ featured, heroReviews, top5, recent, reviews, upcoming, allGames, collections }: Props) {
+export default function HomeClient({ featured, heroReviews, top5, recent, reviews, upcoming, allGames, collections, news }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [searchQ, setSearchQ] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -66,7 +69,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
             <Link href="/rankings">랭킹</Link>
             <Link href="/collections">컬렉션</Link>
             <Link href="/releases">출시 일정</Link>
-            <Link href="/reviews">리뷰</Link>
+            <Link href="/news">뉴스</Link>
             <div className={s.navSearch} ref={searchRef}>
               <span className={s.searchIcon}>⌕</span>
               <input
@@ -207,6 +210,24 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
         </section>
       )}
 
+      {/* ── 최신 게임 뉴스 — 고정 우선, 최근 4개 ── */}
+      {news.length > 0 && (
+        <section className={s.section}>
+          <div className={s.wrap}>
+            <div className={s.rowHead}>
+              <div>
+                <span className={s.rowTitle}>최신 <span className={s.hl}>게임 뉴스</span></span>
+                <span className={s.rowSub}>// 원문 매체로 연결</span>
+              </div>
+              <Link href="/news" className={s.rowMore}>전체 뉴스 →</Link>
+            </div>
+            <div className={ns.grid}>
+              {news.map((n) => <NewsCard key={n.id} news={n} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── 최근 리뷰된 게임 ── */}
       <section className={s.section}>
         <div className={s.wrap}>
@@ -246,7 +267,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
         <div className={s.wrap}>
           <div className={s.rowHead}>
             <span className={s.rowTitle}>전문가 <span className={s.hl}>최신 리뷰</span></span>
-            <Link href="/reviews" className={s.rowMore}>전체 리뷰 →</Link>
+            <Link href="/rankings" className={s.rowMore}>전체 랭킹 →</Link>
           </div>
           <div className={s.reviewGrid}>
             {reviews.map((r) => {

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
-import type { Game, CriticReview } from '@/lib/types'
+import type { Game, CriticReview, NewsWithGame } from '@/lib/types'
+import { NEWS_PUBLIC_SELECT } from '@/lib/news'
 import { buildCollections, featuredCollections, loadGameStats } from '@/lib/curation'
 import HomeClient from './HomeClient'
 
@@ -10,7 +11,7 @@ export default async function HomePage() {
   const supabase = await createClient()
 
   // 병렬 데이터 fetch
-  const [gamesRes, reviewsRes, settingsRes, stats] = await Promise.all([
+  const [gamesRes, reviewsRes, settingsRes, stats, newsRes] = await Promise.all([
     supabase.from('games').select('*').order('created_at', { ascending: false }),
     supabase
       .from('critic_reviews')
@@ -19,6 +20,16 @@ export default async function HomePage() {
       .limit(8),
     supabase.from('settings').select('*'),
     loadGameStats(supabase),
+    // 최신 게임 뉴스 — 메인 고정 우선(노출 순서), 그다음 최신순 4개
+    supabase
+      .from('news')
+      .select(NEWS_PUBLIC_SELECT)
+      .eq('status', 'published')
+      .order('is_pinned', { ascending: false })
+      .order('sort_order')
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(4),
   ])
 
   const games: Game[] = gamesRes.data ?? []
@@ -58,6 +69,7 @@ export default async function HomePage() {
       upcoming={upcoming}
       collections={collections}
       allGames={published}
+      news={(newsRes.data ?? []) as NewsWithGame[]}
     />
   )
 }

@@ -78,7 +78,7 @@
 .logoutBtn:hover { border-color: var(--red-admin); color: var(--red-admin); background: var(--red-bg); }
 
 /* ── MAIN ── */
-.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+.main { margin-left: var(--sidebar-w); flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .topbar {
   height: 60px; background: var(--surface); border-bottom: 1px solid var(--border-light);
   display: flex; align-items: center; justify-content: space-between;
@@ -100,7 +100,8 @@
 .btnGhost:hover { border-color: var(--border-hi-light); color: var(--text-dark); }
 
 /* ── WRITE TAB ── */
-.writeGrid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; }
+.writeGrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 2rem; }
+.writeGrid > * { min-width: 0; }
 
 .successBanner {
   background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green-admin);
@@ -290,8 +291,8 @@
   transition: all 0.15s;
 }
 .cancelEditBtn:hover { border-color: var(--border-hi-light); color: var(--text-dark); }
-.editRow { display: flex; gap: 1rem; margin-bottom: 0.8rem; }
-.editField { flex: 1; margin-bottom: 0.8rem; }
+.editRow { display: flex; flex-wrap: wrap; gap: 0 1rem; margin-bottom: 0.8rem; }
+.editField { flex: 1 1 160px; min-width: 0; margin-bottom: 0.8rem; }
 .editLabel {
   display: block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--text-muted-light); margin-bottom: 0.4rem;
@@ -347,5 +348,12 @@
 @media (max-width: 900px) {
   .sidebar { display: none; }
   .main { margin-left: 0; }
-  .writeGrid { grid-template-columns: 1fr; }
+  .writeGrid { grid-template-columns: minmax(0, 1fr); }
+  .previewPanel { position: static; }
+}
+@media (max-width: 600px) {
+  .topbar { padding: 0 1rem; }
+  .content { padding: 1.2rem 1rem; }
+  .formCard { padding: 1.1rem 1rem; }
+  .profileCard { padding: 1.8rem 1.2rem; }
 }

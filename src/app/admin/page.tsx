@@ -20,13 +20,14 @@ export default async function AdminPage() {
 
   const supabase = createAdminClient()
 
-  const [gamesRes, journalistsRes, reportsRes, settingsRes, criticRes, stats] = await Promise.all([
+  const [gamesRes, journalistsRes, reportsRes, settingsRes, criticRes, stats, newsRes] = await Promise.all([
     supabase.from('games').select('*').order('created_at', { ascending: false }),
     supabase.from('journalists').select('*').order('joined_at', { ascending: false }),
     supabase.from('reports').select('*').eq('status', 'pending').order('created_at', { ascending: false }),
     supabase.from('settings').select('*'),
     supabase.from('critic_reviews').select('*').order('published_at', { ascending: false }),
     loadGameStats(supabase),
+    supabase.from('news').select('*').order('created_at', { ascending: false }),
   ])
 
   const featuredId = Number(
@@ -43,6 +44,7 @@ export default async function AdminPage() {
       initJournalists={journalistsRes.data ?? []}
       initReports={reportsRes.data ?? []}
       initCriticReviews={criticRes.data ?? []}
+      initNews={newsRes.data ?? []}
       collections={collections}
       curationSettings={stats.settings}
       featuredGameId={featuredId}

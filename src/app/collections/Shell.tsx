@@ -14,6 +14,7 @@ export default function Shell({ title, sub, children }: { title: string; sub: st
             <Link href="/rankings">랭킹</Link>
             <Link href="/collections" className={s.navActive}>컬렉션</Link>
             <Link href="/releases">출시 일정</Link>
+            <Link href="/news">뉴스</Link>
           </nav>
         </div>
       </header>
