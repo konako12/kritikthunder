@@ -1,6 +1,8 @@
 export interface Game {
   id: number
   title: string
+  /** 원어(주로 영어) 제목 — title은 화면용 한국어 제목 */
+  title_original: string | null
   developer: string
   publisher: string | null
   year: number

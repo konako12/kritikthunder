@@ -27,7 +27,7 @@ export default async function CmsPage() {
   const [gamesRes, reviewsRes] = await Promise.all([
     supabase
       .from('games')
-      .select('id,title,cover_url,developer,year')
+      .select('id,title,title_original,cover_url,developer,year')
       .eq('status', 'published')
       .order('title'),
     supabase

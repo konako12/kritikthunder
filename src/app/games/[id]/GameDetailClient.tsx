@@ -103,6 +103,9 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
           )}
           <div className={s.gameMeta}>
             <h1>{game.title}</h1>
+            {game.title_original && game.title_original !== game.title && (
+              <div className={s.titleOriginal}>{game.title_original}</div>
+            )}
             <div className={s.subtitle}>
               {game.developer} · {game.publisher ?? game.developer} · {game.year}
             </div>

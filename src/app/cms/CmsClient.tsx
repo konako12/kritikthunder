@@ -6,12 +6,13 @@ import Link from 'next/link'
 import type { Journalist } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
 import ChangePasswordForm from '@/components/ChangePasswordForm'
-import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, sourceDomain, SCORE_DISPLAY_MAX } from '@/lib/utils'
+import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, sourceDomain, SCORE_DISPLAY_MAX, gameTitleMatches } from '@/lib/utils'
 import s from './cms.module.css'
 
 interface GameBasic {
   id: number
   title: string
+  title_original: string | null
   cover_url: string | null
   developer: string
   year: number
@@ -75,7 +76,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
 
   const scoreNum = Number(score)
   const filteredGames = gameSearch.trim()
-    ? games.filter((g) => g.title.toLowerCase().includes(gameSearch.toLowerCase()))
+    ? games.filter((g) => gameTitleMatches(g, gameSearch))
     : games
 
   // ── 로그아웃

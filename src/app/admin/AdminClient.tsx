@@ -6,6 +6,8 @@ import Link from 'next/link'
 import type { CriticReview, Game, Journalist, News, Report } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
 import ChangePasswordForm from '@/components/ChangePasswordForm'
+import { gameTitleMatches } from '@/lib/utils'
+import TranslatableDescription from './TranslatableDescription'
 import CriticReviewsPanel from './CriticReviewsPanel'
 import NewsPanel from './NewsPanel'
 import CollectionsPanel, { type CollectionSummary } from './CollectionsPanel'
@@ -16,7 +18,11 @@ type Page = 'dashboard' | 'games' | 'add' | 'featured' | 'reviews' | 'news' | 'c
 
 interface IgdbResult {
   igdb_id: number
+  /** 한국어 제목 (없으면 원어 제목) */
   title: string
+  title_original: string
+  /** null이면 IGDB에 한국어 제목이 없음 */
+  title_ko_source: 'localization' | 'alternative_name' | null
   year: number | null
   release_date: string | null
   cover_id: string | null
@@ -76,6 +82,9 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
 
   // 게임 등록 폼
   const [fTitle, setFTitle]     = useState('')
+  const [fOrig, setFOrig]       = useState('')   // 원어 제목
+  const [fKoMissing, setFKoMissing] = useState(false) // IGDB에 한국어 제목이 없었음
+  const [descKey, setDescKey]   = useState(0)    // 소개 번역 상태 초기화용
   const [fDev, setFDev]         = useState('')
   const [fPub, setFPub]         = useState('')
   const [fYear, setFYear]       = useState('')
@@ -118,7 +127,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
 
   const filtered = games.filter((g) => {
     const q = gSearch.toLowerCase()
-    const matchQ = !q || g.title.toLowerCase().includes(q) || g.developer.toLowerCase().includes(q)
+    const matchQ = !q || gameTitleMatches(g, q) || g.developer.toLowerCase().includes(q)
     const matchS = !gStatus || g.status === gStatus
     return matchQ && matchS
   })
@@ -189,7 +198,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
         coverUrl = result.url
       }
       const data = await apiCall('/api/games', 'POST', {
-        title: fTitle.trim(), developer: fDev.trim(),
+        title: fTitle.trim(), title_original: fOrig.trim() || fTitle.trim(), developer: fDev.trim(),
         publisher: fPub.trim() || fDev.trim(),
         year: Number(fYear), release_date: fRelease || null, genre: fGenre, platforms: fPlats,
         age_rating: fRating, status: fStatus,
@@ -204,7 +213,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
   }
 
   function resetForm() {
-    setFTitle(''); setFDev(''); setFPub(''); setFYear(''); setFRelease(''); setFGenre('')
+    setFTitle(''); setFOrig(''); setFKoMissing(false); setDescKey((k) => k + 1); setFDev(''); setFPub(''); setFYear(''); setFRelease(''); setFGenre('')
     setFRating('전체이용가'); setFStatus('published'); setFImg(''); setFDesc('')
     setFPlats([]); setFErrors({}); setFFile(null); setFPreview('')
     setIgdbCoverId(null); setIgdbQuery(''); setIgdbResults([]); setIgdbError(''); setIgdbIsApiError(false); setDupWarning(null)
@@ -236,6 +245,9 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
 
   function applyIgdbResult(r: IgdbResult) {
     setFTitle(r.title)
+    setFOrig(r.title_original)
+    setFKoMissing(!r.title_ko_source)
+    setDescKey((k) => k + 1)
     if (r.developer) setFDev(r.developer)
     if (r.publisher) setFPub(r.publisher)
     if (r.year) setFYear(String(r.year))
@@ -252,7 +264,8 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
     setIgdbResults([])
     setIgdbQuery('')
     setIgdbError('')
-    const dup = games.find((g) => g.title.toLowerCase() === r.title.toLowerCase())
+    const names = [r.title, r.title_original].map((v) => v.toLowerCase())
+    const dup = games.find((g) => [g.title, g.title_original ?? ''].some((v) => names.includes(v.toLowerCase())))
     setDupWarning(dup ? r.title : null)
     showToast(`✅ "${r.title}" 정보가 자동으로 입력됐어요`)
   }
@@ -279,7 +292,8 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
         coverUrl = uploaded
       }
       const data = await apiCall(`/api/games/${editGame.id}`, 'PATCH', {
-        title: editGame.title, developer: editGame.developer,
+        title: editGame.title, title_original: editGame.title_original?.trim() || editGame.title,
+        developer: editGame.developer, description: editGame.description?.trim() || null,
         year: editGame.year, release_date: editGame.release_date || null,
         genre: editGame.genre, status: editGame.status,
         cover_url: coverUrl,
@@ -617,6 +631,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                         )}
                         <div className={s.igdbCardBody}>
                           <div className={s.igdbCardTitle}>{r.title}</div>
+                          {r.title !== r.title_original && <div className={s.igdbCardOrig}>{r.title_original}</div>}
                           <div className={s.igdbCardMeta}>
                             {[r.developer, r.year].filter(Boolean).join(' · ')}
                           </div>
@@ -647,32 +662,43 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                   <div className={s.formSectionTitle}>기본 정보</div>
                   <div className={s.formGrid}>
                     <div className={s.formGroup}>
-                      <label className={s.formLabel}>게임 제목 <span className={s.req}>*</span></label>
-                      <input className={s.formInput} value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="예) Elden Ring" />
+                      <label className={s.formLabel}>
+                        게임 제목 (한국어) <span className={s.req}>*</span>
+                        {fKoMissing && fTitle.trim() === fOrig.trim()
+                          ? <span className={s.titleHint}>한국어 제목 없음 - 직접 입력</span>
+                          : fOrig && fTitle !== fOrig && <span className={s.titleKoOk}>IGDB 한국어 제목</span>}
+                      </label>
+                      <input className={s.formInput} value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="예) 엘든 링" />
                       {fErrors.title && <span className={s.formError}>{fErrors.title}</span>}
                     </div>
+                    <div className={s.formGroup}>
+                      <label className={s.formLabel}>원어 제목</label>
+                      <input className={s.formInput} value={fOrig} onChange={(e) => setFOrig(e.target.value)} placeholder="예) Elden Ring · 비우면 게임 제목과 같게 저장" />
+                    </div>
+                  </div>
+                  <div className={s.formGrid}>
                     <div className={s.formGroup}>
                       <label className={s.formLabel}>개발사 <span className={s.req}>*</span></label>
                       <input className={s.formInput} value={fDev} onChange={(e) => setFDev(e.target.value)} placeholder="예) FromSoftware" />
                       {fErrors.dev && <span className={s.formError}>{fErrors.dev}</span>}
                     </div>
-                  </div>
-                  <div className={s.formGrid}>
                     <div className={s.formGroup}>
                       <label className={s.formLabel}>배급사</label>
                       <input className={s.formInput} value={fPub} onChange={(e) => setFPub(e.target.value)} placeholder="예) Bandai Namco" />
                     </div>
+                  </div>
+                  <div className={s.formGrid}>
                     <div className={s.formGroup}>
                       <label className={s.formLabel}>출시연도 <span className={s.req}>*</span></label>
                       <input className={s.formInput} type="number" value={fYear} onChange={(e) => setFYear(e.target.value)} placeholder="2024" />
                       {fErrors.year && <span className={s.formError}>{fErrors.year}</span>}
                     </div>
-                  </div>
-                  <div className={s.formGroup}>
-                    <label className={s.formLabel}>출시일</label>
-                    <input className={s.formInput} type="date" value={fRelease} style={{ maxWidth: 200 }}
-                      onChange={(e) => { setFRelease(e.target.value); if (e.target.value) setFYear(e.target.value.slice(0, 4)) }} />
-                    <span className={s.uploadHint}>비워두면 출시 일정에서 "출시일 미정"으로 표시돼요 (출시연도 기준)</span>
+                    <div className={s.formGroup}>
+                      <label className={s.formLabel}>출시일</label>
+                      <input className={s.formInput} type="date" value={fRelease}
+                        onChange={(e) => { setFRelease(e.target.value); if (e.target.value) setFYear(e.target.value.slice(0, 4)) }} />
+                      <span className={s.uploadHint}>비워두면 출시 일정에서 "출시일 미정"으로 표시돼요</span>
+                    </div>
                   </div>
                   <div className={s.formGrid3}>
                     <div className={s.formGroup}>
@@ -731,7 +757,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                   </div>
                   <div className={s.formGroup}>
                     <label className={s.formLabel}>게임 소개</label>
-                    <textarea className={`${s.formInput} ${s.formTextarea}`} value={fDesc} onChange={(e) => setFDesc(e.target.value)} rows={3} placeholder="게임에 대한 간략한 소개..." />
+                    <TranslatableDescription key={descKey} value={fDesc} onChange={setFDesc} placeholder="게임에 대한 간략한 소개..." />
                   </div>
 
                   <div className={s.formActions}>
@@ -922,9 +948,16 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
             <div className={s.modalBody}>
               <div className={s.formGrid}>
                 <div className={s.formGroup}>
-                  <label className={s.formLabel}>게임 제목</label>
+                  <label className={s.formLabel}>게임 제목 (한국어)</label>
                   <input className={s.formInput} value={editGame.title} onChange={(e) => setEditGame({ ...editGame, title: e.target.value })} />
                 </div>
+                <div className={s.formGroup}>
+                  <label className={s.formLabel}>원어 제목</label>
+                  <input className={s.formInput} value={editGame.title_original ?? ''} placeholder="비우면 게임 제목과 같게 저장"
+                    onChange={(e) => setEditGame({ ...editGame, title_original: e.target.value })} />
+                </div>
+              </div>
+              <div className={s.formGrid}>
                 <div className={s.formGroup}>
                   <label className={s.formLabel}>개발사</label>
                   <input className={s.formInput} value={editGame.developer} onChange={(e) => setEditGame({ ...editGame, developer: e.target.value })} />
@@ -946,6 +979,11 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                 <label className={s.formLabel}>출시일 (비우면 미정)</label>
                 <input className={s.formInput} type="date" value={editGame.release_date ?? ''}
                   onChange={(e) => setEditGame({ ...editGame, release_date: e.target.value || null, year: e.target.value ? Number(e.target.value.slice(0, 4)) : editGame.year })} />
+              </div>
+              <div className={s.formGroup}>
+                <label className={s.formLabel}>게임 소개</label>
+                <TranslatableDescription key={editGame.id} value={editGame.description ?? ''}
+                  onChange={(v) => setEditGame((g) => (g ? { ...g, description: v } : g))} placeholder="게임에 대한 간략한 소개..." />
               </div>
               <div className={s.formGroup}>
                 <label className={s.formLabel}>상태</label>

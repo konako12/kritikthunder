@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import type { Game, CriticReview, NewsWithGame } from '@/lib/types'
-import { scoreClass, sourceDomain } from '@/lib/utils'
+import { scoreClass, sourceDomain, gameTitleMatches } from '@/lib/utils'
 import type { Collection } from '@/lib/curation'
 import CollectionCard from './collections/CollectionCard'
 import HeroAccolades from './HeroAccolades'
@@ -49,7 +49,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
     ? allGames
         .filter(
           (g) =>
-            g.title.toLowerCase().includes(searchQ.toLowerCase()) ||
+            gameTitleMatches(g, searchQ) ||
             g.developer.toLowerCase().includes(searchQ.toLowerCase())
         )
         .slice(0, 5)

@@ -84,6 +84,29 @@ function mapGenres(genres: { id: number }[]): string | null {
   return null
 }
 
+// ── 한국어 제목 찾기 (번역기 없이 IGDB 데이터만 사용) ──────────────
+// 우선순위: game_localizations의 한국 지역(ko-KR) → alternative_names의 "Korean title"
+//          → 한글이 들어간 다른 별칭. 개발 중 가칭("working")은 제외 (예: 스텔라 블레이드의 "프로젝트 이브")
+const HANGUL = /[가-힣]/
+
+interface IgdbLocalization { name?: string; region?: { identifier?: string; name?: string } }
+interface IgdbAltName { name?: string; comment?: string }
+
+function koreanTitle(g: { game_localizations?: IgdbLocalization[]; alternative_names?: IgdbAltName[] }):
+  { title: string; source: 'localization' | 'alternative_name' } | null {
+  const loc = (g.game_localizations ?? []).find(
+    (l) => (l.region?.identifier === 'ko-KR' || l.region?.name === 'Korea') && l.name?.trim()
+  )
+  if (loc) return { title: loc.name!.trim(), source: 'localization' }
+
+  const alts = (g.alternative_names ?? []).filter(
+    (a) => a.name?.trim() && HANGUL.test(a.name) && !/working/i.test(a.comment ?? '')
+  )
+  const alt = alts.find((a) => /korean/i.test(a.comment ?? '')) ?? alts[0]
+  if (alt) return { title: alt.name!.trim(), source: 'alternative_name' }
+  return null
+}
+
 // ── GET /api/igdb/search?q=... ──────────────────────────────────────
 export async function GET(req: NextRequest) {
   const denied = await requireAdmin()
@@ -103,7 +126,8 @@ export async function GET(req: NextRequest) {
       `search "${q.replace(/"/g, '')}";` +
       `fields name, cover.image_id, first_release_date, platforms.id, genres.id,` +
       ` involved_companies.company.name, involved_companies.developer, involved_companies.publisher,` +
-      ` summary;` +
+      ` summary, game_localizations.name, game_localizations.region.identifier, game_localizations.region.name,` +
+      ` alternative_names.name, alternative_names.comment;` +
       ` where game_type = null | game_type = (0,8,9,10,11);` +
       ` limit 8;`
 
@@ -165,9 +189,13 @@ export async function GET(req: NextRequest) {
       const devs = (g.involved_companies ?? []).filter((ic: { developer: boolean }) => ic.developer)
       const pubs = (g.involved_companies ?? []).filter((ic: { publisher: boolean }) => ic.publisher)
 
+      const ko = koreanTitle(g)
+
       return {
         igdb_id:     g.id,
-        title:       g.name,
+        title:       ko?.title ?? g.name,       // 화면용 — 한국어 제목이 없으면 원어 그대로
+        title_original: g.name,                 // 원어 제목은 항상
+        title_ko_source: ko?.source ?? null,    // null이면 한국어 제목 없음 → 관리자가 직접 입력
         year,
         release_date,
         cover_id:    g.cover?.image_id ?? null,

@@ -54,3 +54,11 @@ export function normalizeScoreDisplay(v: string | null | undefined): string | nu
 export function scoreLabel(r: { score: number; score_display?: string | null }): string {
   return r.score_display?.trim() || `${r.score}/100`
 }
+
+/** 게임 검색 — 한국어 제목 · 원어 제목 둘 다로 찾기 (대소문자·공백 무시) */
+export function gameTitleMatches(g: { title: string; title_original?: string | null }, query: string): boolean {
+  const norm = (v: string) => v.toLowerCase().replace(/\s+/g, '')
+  const q = norm(query)
+  if (!q) return true
+  return norm(g.title).includes(q) || (!!g.title_original && norm(g.title_original).includes(q))
+}

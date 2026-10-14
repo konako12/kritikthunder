@@ -6,6 +6,7 @@ import {
   NEWS_IMAGE_SOURCE_LABEL, NEWS_MEDIA_MAX, NEWS_STATUS_LABEL, NEWS_SUMMARY_MAX, NEWS_TITLE_MAX,
   formatNewsDate, normalizeNewsUrl,
 } from '@/lib/news'
+import { gameTitleMatches } from '@/lib/utils'
 import NewsCard from '@/components/news/NewsCard'
 import NewsImage from '@/components/news/NewsImage'
 import ns from '@/components/news/news.module.css'
@@ -283,7 +284,7 @@ export default function NewsPanel({ games, news, setNews, showToast }: Props) {
 
   const selGame = gameOf(draft?.game_id ?? null)
   const gameMatches = gameQ.trim()
-    ? games.filter((g) => g.title.toLowerCase().includes(gameQ.trim().toLowerCase())).slice(0, 8)
+    ? games.filter((g) => gameTitleMatches(g, gameQ)).slice(0, 8)
     : []
 
   const canFetch = !!draft && !fetching && !!draft.source_url.trim() && draft.source_url.trim() !== fetchedUrl

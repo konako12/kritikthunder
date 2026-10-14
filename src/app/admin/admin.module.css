@@ -541,3 +541,29 @@
 }
 .newsTab:hover { border-color: var(--border-hi-light); }
 .newsTabOn { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue); }
+
+/* ── 게임 제목 · 소개 번역 ── */
+.titleHint {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0; text-transform: none;
+  color: var(--orange); background: var(--orange-bg); border: 1px solid var(--orange-border);
+  border-radius: 4px; padding: 0.05rem 0.4rem; margin-left: 0.4rem;
+}
+.titleKoOk {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0; text-transform: none;
+  color: var(--green-admin); margin-left: 0.4rem;
+}
+.descTools { display: flex; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+.descOriginal {
+  margin-top: 0.5rem; padding: 0.7rem 0.85rem; border-radius: 6px;
+  background: var(--surface2); border: 1px dashed var(--border-hi-light);
+  font-size: 0.78rem; line-height: 1.6; color: var(--text-sub-light); white-space: pre-wrap;
+}
+.descOriginalHead {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted-light); margin-bottom: 0.4rem;
+}
+.igdbCardOrig {
+  font-size: 0.6rem; color: var(--text-muted-light);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { Game } from '@/lib/types'
+import { gameTitleMatches } from '@/lib/utils'
 import s from './games.module.css'
 
 interface Props {
@@ -42,7 +43,7 @@ export default function GamesClient({ games }: Props) {
       const q = searchQ.toLowerCase()
       list = list.filter(
         (g) =>
-          g.title.toLowerCase().includes(q) ||
+          gameTitleMatches(g, q) ||
           g.developer.toLowerCase().includes(q) ||
           (g.publisher ?? '').toLowerCase().includes(q)
       )
