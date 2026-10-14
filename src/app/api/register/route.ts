@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (existing) {
       const statusMsg =
         existing.status === 'approved' ? '이미 승인된 계정입니다.' :
-        existing.status === 'rejected' ? '가입 신청이 거절된 계정입니다. 관리자에게 문의해주세요.' :
+        existing.status === 'rejected' ? '가입 신청이 거절된 계정입니다. 로그인한 뒤 "재신청하기"에서 다시 신청할 수 있어요.' :
         '이미 가입 신청이 접수된 이메일입니다.'
       return NextResponse.json({ error: statusMsg }, { status: 409 })
     }

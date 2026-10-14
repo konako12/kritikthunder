@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import AccountLinks from '@/components/AccountLinks'
 import { createClient } from '@/lib/supabase-server'
 import type { NewsWithGame } from '@/lib/types'
 import { NEWS_PAGE_SIZE, NEWS_PUBLIC_SELECT } from '@/lib/news'
@@ -131,9 +132,7 @@ export default async function NewsPage({ searchParams }: { searchParams: SearchP
               뉴스 저작권은 각 매체에 있습니다. 기사 전문은 원문 링크에서 확인하세요.
             </div>
             <div className={s.pressLinks}>
-              <Link href="/login">기자 로그인</Link>
-              {' · '}
-              <Link href="/register">기자 가입 신청</Link>
+              <AccountLinks />
             </div>
           </div>
         </div>

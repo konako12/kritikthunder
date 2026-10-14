@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import AccountLinks from '@/components/AccountLinks'
 import type { Game, CriticReview, NewsWithGame } from '@/lib/types'
 import { scoreClass, sourceDomain, gameTitleMatches, formatReleaseDate } from '@/lib/utils'
 import { PLATFORM_GROUPS, inPlatformGroup, platformLabels, type PlatformGroup } from '@/lib/platforms'
@@ -398,9 +399,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
               국내 게임 전문지 기자와 플레이어가 함께 만드는 신뢰할 수 있는 게임 정보
             </div>
             <div className={s.pressLinks}>
-              <Link href="/login">기자 로그인</Link>
-              {' · '}
-              <Link href="/register">기자 가입 신청</Link>
+              <AccountLinks />
             </div>
           </div>
         </div>

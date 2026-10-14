@@ -575,3 +575,21 @@
   padding: 0.15rem 0.45rem; border-radius: 4px;
   background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border);
 }
+
+/* ── 가입 거절 사유 ── */
+.rejectBox {
+  background: var(--surface); border-radius: 12px; padding: 1.6rem; width: 460px; max-width: calc(100vw - 32px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+}
+.rejectOptions { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.6rem; }
+.rejectOption {
+  display: flex; align-items: center; gap: 0.55rem; padding: 0.6rem 0.8rem; border-radius: 7px;
+  border: 1px solid var(--border-light); font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+}
+.rejectOption:hover { border-color: var(--border-hi-light); }
+.rejectOptionOn { border-color: var(--red-border); background: var(--red-bg); color: var(--red-admin); font-weight: 600; }
+.prevReason {
+  background: var(--orange-bg); border: 1px solid var(--orange-border); border-radius: 7px;
+  padding: 0.55rem 0.75rem; margin-bottom: 0.8rem; font-size: 0.75rem; line-height: 1.5; color: #7c2d12;
+}
+.prevReasonLabel { display: block; font-size: 0.62rem; font-weight: 700; color: var(--orange); margin-bottom: 0.15rem; }

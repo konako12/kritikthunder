@@ -7,6 +7,7 @@ import type { CriticReview, Game, Journalist, News, Report } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
 import ChangePasswordForm from '@/components/ChangePasswordForm'
 import { gameTitleMatches } from '@/lib/utils'
+import { REJECTION_REASON_MAX, REJECTION_REASON_PRESETS, kstDate } from '@/lib/journalist-review'
 import { PLATFORMS, normalizePlatform, platformLabels } from '@/lib/platforms'
 import TranslatableDescription from './TranslatableDescription'
 import CriticReviewsPanel from './CriticReviewsPanel'
@@ -142,6 +143,13 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
 
   // 확인 다이얼로그
   const [confirm, setConfirm] = useState<{ title: string; desc: string; onOk: () => void } | null>(null)
+
+  // 가입 거절 — 사유 선택/입력 창
+  const [rejectTarget, setRejectTarget] = useState<{ id: number; name: string } | null>(null)
+  const [rejectChoice, setRejectChoice] = useState<string>('')   // 자주 쓰는 사유 또는 '__custom'
+  const [rejectCustom, setRejectCustom] = useState('')
+  const [rejectError, setRejectError] = useState('')
+  const [rejecting, setRejecting] = useState(false)
 
   const filtered = games.filter((g) => {
     const q = gSearch.toLowerCase()
@@ -335,18 +343,32 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
       showToast('✅ 기자가 승인됐어요' + mailNote(data?.mail))
     } catch (e) { showToast(`⚠️ ${(e as Error).message}`) }
   }
-  async function rejectJournalist(id: number, name: string) {
-    setConfirm({
-      title: '가입을 거절할까요?',
-      desc: `${name} 기자의 신청을 거절합니다. 신청자에게 결과 안내 메일이 자동으로 발송돼요.`,
-      onOk: async () => {
-        try {
-          const data = await apiCall(`/api/admin/journalists/${id}`, 'PATCH', { status: 'rejected' })
-          setJournalists(journalists.map((j) => j.id === id ? { ...j, status: 'rejected' } : j))
-          showToast(`✗ "${name}" 신청이 거절됐어요` + mailNote(data?.mail))
-        } catch (e) { showToast(`⚠️ ${(e as Error).message}`) }
-      },
-    })
+  function rejectJournalist(id: number, name: string) {
+    setRejectTarget({ id, name })
+    setRejectChoice('')
+    setRejectCustom('')
+    setRejectError('')
+  }
+
+  async function submitReject() {
+    if (!rejectTarget) return
+    const reason = (rejectChoice === '__custom' ? rejectCustom : rejectChoice).trim()
+    if (!reason) { setRejectError('거절 사유를 선택하거나 입력해주세요.'); return }
+    if (reason.length > REJECTION_REASON_MAX) { setRejectError(`${REJECTION_REASON_MAX}자 이내로 입력해주세요.`); return }
+
+    const { id, name } = rejectTarget
+    setRejecting(true)
+    try {
+      const data = await apiCall(`/api/admin/journalists/${id}`, 'PATCH', { status: 'rejected', rejection_reason: reason })
+      const { mail, ...row } = data ?? {}
+      setJournalists(journalists.map((j) => j.id === id ? { ...j, ...row } : j))
+      setRejectTarget(null)
+      showToast(`✗ "${name}" 신청이 거절됐어요` + mailNote(mail))
+    } catch (e) {
+      setRejectError((e as Error).message)
+    } finally {
+      setRejecting(false)
+    }
   }
   async function removeJournalist(id: number, name: string) {
     setConfirm({
@@ -862,11 +884,22 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                     <div className={s.jCardTop}>
                       <div className={`${s.jAvatar} ${s.avP}`}>{j.name[0]}</div>
                       <div><div className={s.jName}>{j.name}</div><div className={s.jMedia}>{j.media}</div></div>
-                      <span className={`${s.badge} ${s.bOrange}`} style={{ marginLeft: 'auto' }}>대기</span>
+                      <span style={{ marginLeft: 'auto', display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        {(j.apply_count ?? 1) > 1 && (
+                          <span className={`${s.badge} ${s.bBlue}`} style={{ textTransform: 'none' }}>재신청 ({j.apply_count}회차)</span>
+                        )}
+                        <span className={`${s.badge} ${s.bOrange}`}>대기</span>
+                      </span>
                     </div>
+                    {(j.apply_count ?? 1) > 1 && j.rejection_reason && (
+                      <div className={s.prevReason}>
+                        <span className={s.prevReasonLabel}>이전 거절 사유</span>
+                        {j.rejection_reason}
+                      </div>
+                    )}
                     <div className={s.jRows}>
                       <div className={s.jRow}><span className={s.jKey}>이메일</span><span>{j.email}</span></div>
-                      <div className={s.jRow}><span className={s.jKey}>신청일</span><span>{j.joined_at}</span></div>
+                      <div className={s.jRow}><span className={s.jKey}>신청일</span><span>{j.last_applied_at ? kstDate(new Date(j.last_applied_at)) : j.joined_at}</span></div>
                       {j.bio && (
                         <div className={s.jRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
                           <span className={s.jKey}>자기소개</span>
@@ -1040,6 +1073,39 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
             <div className={s.modalFoot}>
               <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setEditGame(null)}>취소</button>
               <button className={`${s.btn} ${s.btnPrimary}`} onClick={saveEdit}>저장</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 가입 거절 — 사유 선택/입력 */}
+      {rejectTarget && (
+        <div className={s.confirmBg} onClick={(e) => { if (e.target === e.currentTarget && !rejecting) setRejectTarget(null) }}>
+          <div className={s.rejectBox}>
+            <div className={s.confirmTitle}>"{rejectTarget.name}" 신청을 거절할까요?</div>
+            <div className={s.confirmDesc} style={{ marginBottom: '1rem' }}>
+              거절 사유는 신청자에게 메일과 안내 페이지로 전달되고, 재신청할 때 화면 위쪽에 표시돼요.
+            </div>
+            <div className={s.rejectOptions}>
+              {[...REJECTION_REASON_PRESETS, '__custom'].map((r) => (
+                <label key={r} className={`${s.rejectOption} ${rejectChoice === r ? s.rejectOptionOn : ''}`}>
+                  <input type="radio" name="reject-reason" checked={rejectChoice === r}
+                    onChange={() => { setRejectChoice(r); setRejectError('') }} />
+                  {r === '__custom' ? '직접 입력' : r}
+                </label>
+              ))}
+            </div>
+            {rejectChoice === '__custom' && (
+              <textarea className={`${s.formInput} ${s.formTextarea}`} rows={3} autoFocus maxLength={REJECTION_REASON_MAX}
+                value={rejectCustom} onChange={(e) => { setRejectCustom(e.target.value); setRejectError('') }}
+                placeholder="신청자가 무엇을 보완하면 되는지 알 수 있게 적어주세요" />
+            )}
+            {rejectError && <div className={s.formError} style={{ marginTop: '0.5rem', fontSize: '0.75rem' }}>{rejectError}</div>}
+            <div className={s.confirmBtns} style={{ justifyContent: 'flex-end', marginTop: '1.2rem' }}>
+              <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setRejectTarget(null)} disabled={rejecting}>취소</button>
+              <button className={`${s.btn} ${s.btnDanger}`} onClick={submitReject} disabled={rejecting}>
+                {rejecting ? '처리 중...' : '거절하고 안내 메일 보내기'}
+              </button>
             </div>
           </div>
         </div>

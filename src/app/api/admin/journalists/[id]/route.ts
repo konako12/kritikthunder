@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { sendApprovalMail, sendRejectionMail } from '@/lib/journalist-mail'
 import type { MailResult } from '@/lib/mailer'
+import { REJECTION_REASON_MAX } from '@/lib/journalist-review'
 
 const STATUSES = ['pending', 'approved', 'rejected']
 
@@ -16,9 +17,17 @@ export async function PATCH(
 
   const { id } = await params
   const supabase = createAdminClient()
-  const { status } = await req.json().catch(() => ({ status: null }))
+  const { status, rejection_reason } = await req.json().catch(() => ({ status: null }))
   if (!STATUSES.includes(status)) {
     return NextResponse.json({ error: '상태 값이 올바르지 않아요' }, { status: 400 })
+  }
+  // 거절할 때는 사유 필수 — 거절 메일 · /rejected 페이지 · 재신청 화면에 보여줌
+  const reason = String(rejection_reason ?? '').trim()
+  if (status === 'rejected') {
+    if (!reason) return NextResponse.json({ error: '거절 사유를 입력해주세요' }, { status: 400 })
+    if (reason.length > REJECTION_REASON_MAX) {
+      return NextResponse.json({ error: `거절 사유는 ${REJECTION_REASON_MAX}자 이내로 입력해주세요` }, { status: 400 })
+    }
   }
 
   // 같은 상태로 다시 바꾸면 메일을 또 보내지 않도록 이전 상태 확인
@@ -26,7 +35,8 @@ export async function PATCH(
 
   const { data, error } = await supabase
     .from('journalists')
-    .update({ status })
+    // 거절: 사유 · 일시 기록 / 승인: 이전 거절 사유는 기록용으로 그대로 둠
+    .update(status === 'rejected' ? { status, rejection_reason: reason, rejected_at: new Date().toISOString() } : { status })
     .eq('id', id)
     .select()
     .single()
@@ -38,9 +48,12 @@ export async function PATCH(
   let mail: MailResult | null = null
   if (before?.status !== status && (status === 'approved' || status === 'rejected')) {
     const applicant = { name: data.name, media: data.media, email: data.email }
+    const siteUrl = process.env.SITE_URL?.trim() || req.nextUrl.origin
     mail = status === 'approved'
-      ? await sendApprovalMail(applicant, process.env.SITE_URL?.trim() || req.nextUrl.origin)
-      : await sendRejectionMail(applicant, process.env.CONTACT_EMAIL?.trim())
+      ? await sendApprovalMail(applicant, siteUrl)
+      : await sendRejectionMail(applicant, {
+          reason, rejectedAt: data.rejected_at, siteUrl, contactEmail: process.env.CONTACT_EMAIL?.trim(),
+        })
   }
 
   return NextResponse.json({ ...data, mail })

@@ -50,6 +50,11 @@ export interface Journalist {
   bio: string | null
   joined_at: string
   created_at: string
+  /** 010_journalist_reapply.sql — 실행 전 데이터에는 없을 수 있음 */
+  rejection_reason?: string | null
+  rejected_at?: string | null
+  apply_count?: number
+  last_applied_at?: string | null
 }
 
 export interface Report {

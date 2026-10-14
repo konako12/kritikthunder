@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import AccountLinks from '@/components/AccountLinks'
 import type { Game } from '@/lib/types'
 import { gameTitleMatches } from '@/lib/utils'
 import { PLATFORM_GROUPS, inPlatformGroup, platformLabels, type PlatformGroup } from '@/lib/platforms'
@@ -222,9 +223,7 @@ export default function GamesClient({ games }: Props) {
         <div>
           <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
           <div className={s.pressLinks}>
-            <Link href="/login">기자 로그인</Link>
-            {' · '}
-            <Link href="/register">기자 가입 신청</Link>
+            <AccountLinks />
           </div>
         </div>
       </footer>

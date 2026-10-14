@@ -19,7 +19,9 @@ import type { Journalist } from '@/lib/types'
 
 export type AuthDestination = '/admin' | '/cms' | '/pending' | '/rejected' | '/no-access'
 
-export type JournalistSummary = Pick<Journalist, 'name' | 'media' | 'email' | 'status' | 'joined_at'>
+export type JournalistSummary = Pick<Journalist,
+  'id' | 'name' | 'media' | 'email' | 'status' | 'joined_at' | 'article_links' | 'bio' |
+  'rejection_reason' | 'rejected_at' | 'apply_count' | 'last_applied_at'>
 
 export interface DestinationResult {
   destination: AuthDestination
@@ -48,7 +50,8 @@ async function findJournalist(email: string): Promise<JournalistSummary | null> 
   const escaped = email.replace(/[\\%_]/g, (c) => `\\${c}`)
   const { data, error } = await supabase
     .from('journalists')
-    .select('name, media, email, status, joined_at')
+    // '*' — 새 칸(010 SQL)이 아직 없어도 조회가 실패하지 않게
+    .select('*')
     .ilike('email', escaped)
     .limit(1)
     .maybeSingle()

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import AccountLinks from '@/components/AccountLinks'
 import { createClient } from '@/lib/supabase-server'
 import { scoreClass } from '@/lib/utils'
 import { PLATFORM_GROUPS, parsePlatform, platformCodesInGroup, platformLabels, type PlatformGroup } from '@/lib/platforms'
@@ -193,9 +194,7 @@ export default async function ReleasesPage({ searchParams }: { searchParams: Sea
           <div>
             <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
             <div className={s.pressLinks}>
-              <Link href="/login">기자 로그인</Link>
-              {' · '}
-              <Link href="/register">기자 가입 신청</Link>
+              <AccountLinks />
             </div>
           </div>
         </div>

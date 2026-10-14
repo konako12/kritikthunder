@@ -5,6 +5,7 @@ import Link from 'next/link'
 import StatusCard from '@/components/auth-status/StatusCard'
 import LogoutButton from '@/components/auth-status/LogoutButton'
 import { currentStatus, DESTINATION_LABEL } from '@/components/auth-status/current'
+import { kstDate } from '@/lib/journalist-review'
 import s from '@/components/auth-status/status.module.css'
 
 export const metadata: Metadata = { title: '가입 심사 중 | KRITIK' }
@@ -21,7 +22,10 @@ export default async function PendingPage() {
           <div className={s.info}>
             <div className={s.infoRow}><span>이름</span><span>{journalist!.name}</span></div>
             <div className={s.infoRow}><span>소속 매체</span><span>{journalist!.media}</span></div>
-            <div className={s.infoRow}><span>신청일</span><span>{journalist!.joined_at?.replaceAll('-', '.')}</span></div>
+            <div className={s.infoRow}><span>신청일</span><span>{(journalist!.last_applied_at ? kstDate(new Date(journalist!.last_applied_at)) : journalist!.joined_at)?.replaceAll('-', '.')}</span></div>
+            {(journalist!.apply_count ?? 1) > 1 && (
+              <div className={s.infoRow}><span>신청 횟수</span><span>재신청 ({journalist!.apply_count}회차)</span></div>
+            )}
           </div>
           <p className={s.desc}>
             심사 결과는 이메일로 안내드려요.<br />
