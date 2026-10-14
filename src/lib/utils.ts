@@ -62,3 +62,8 @@ export function gameTitleMatches(g: { title: string; title_original?: string | n
   if (!q) return true
   return norm(g.title).includes(q) || (!!g.title_original && norm(g.title_original).includes(q))
 }
+
+/** 출시일 표시 — 날짜가 있으면 2026.10.15, 없으면 2026년 */
+export function formatReleaseDate(g: { release_date: string | null; year: number }): string {
+  return g.release_date ? g.release_date.replaceAll('-', '.') : `${g.year}년`
+}

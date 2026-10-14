@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { Game } from '@/lib/types'
 import { gameTitleMatches } from '@/lib/utils'
+import { PLATFORM_GROUPS, inPlatformGroup, platformLabels, type PlatformGroup } from '@/lib/platforms'
 import s from './games.module.css'
 
 interface Props {
@@ -30,10 +31,6 @@ export default function GamesClient({ games }: Props) {
     () => ['all', ...Array.from(new Set(games.map((g) => g.genre))).sort()],
     [games]
   )
-  const platforms = useMemo(
-    () => ['all', ...Array.from(new Set(games.flatMap((g) => g.platforms))).sort()],
-    [games]
-  )
 
   // 필터 + 검색 + 정렬
   const filtered = useMemo(() => {
@@ -49,7 +46,7 @@ export default function GamesClient({ games }: Props) {
       )
     }
     if (genre !== 'all')    list = list.filter((g) => g.genre === genre)
-    if (platform !== 'all') list = list.filter((g) => g.platforms.includes(platform))
+    if (platform !== 'all') list = list.filter((g) => inPlatformGroup(g.platforms, platform as PlatformGroup))
 
     return [...list].sort((a, b) => {
       if (sortKey === 'score')     return (b.critic_score ?? -1) - (a.critic_score ?? -1)
@@ -121,13 +118,13 @@ export default function GamesClient({ games }: Props) {
           <div className={s.filterGroup}>
             <span className={s.filterLabel}>플랫폼</span>
             <div className={s.chips}>
-              {platforms.map((p) => (
+              {[{ value: 'all', label: '전체' }, ...PLATFORM_GROUPS].map((p) => (
                 <button
-                  key={p}
-                  className={`${s.chip} ${platform === p ? s.chipActive : ''}`}
-                  onClick={() => setPlatform(p)}
+                  key={p.value}
+                  className={`${s.chip} ${platform === p.value ? s.chipActive : ''}`}
+                  onClick={() => setPlatform(p.value)}
                 >
-                  {p === 'all' ? '전체' : p}
+                  {p.label}
                 </button>
               ))}
             </div>
@@ -202,7 +199,7 @@ export default function GamesClient({ games }: Props) {
                   <div className={s.cardDev}>{game.developer} · {game.year}</div>
                   <div className={s.cardTags}>
                     <span className={s.cardGenre}>{game.genre}</span>
-                    {game.platforms.slice(0, 2).map((p) => (
+                    {platformLabels(game.platforms).slice(0, 2).map((p) => (
                       <span key={p} className={s.cardPlatform}>{p}</span>
                     ))}
                     {game.platforms.length > 2 && (

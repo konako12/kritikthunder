@@ -7,6 +7,7 @@ import type { CriticReview, Game, Journalist, News, Report } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
 import ChangePasswordForm from '@/components/ChangePasswordForm'
 import { gameTitleMatches } from '@/lib/utils'
+import { PLATFORMS, normalizePlatform, platformLabels } from '@/lib/platforms'
 import TranslatableDescription from './TranslatableDescription'
 import CriticReviewsPanel from './CriticReviewsPanel'
 import NewsPanel from './NewsPanel'
@@ -45,7 +46,6 @@ interface Props {
   featuredGameId: number
 }
 
-const PLATFORMS = ['PS5', 'PS4', 'Xbox', 'PC', 'Switch', 'Mobile']
 const GENRES = ['액션 RPG', 'RPG', '액션', '전략', '인디', '스포츠', '슈팅', '어드벤처', '시뮬레이션']
 const RATINGS = ['전체이용가', '12세이용가', '15세이용가', '청소년이용불가']
 
@@ -63,6 +63,24 @@ function statusBadge(status: Game['status']) {
     upcoming:  { cls: s.bBlue,  label: '출시예정' },
   }
   return map[status]
+}
+
+/** 플랫폼 선택 — 등록 폼 · 수정 모달 공용 (목록은 src/lib/platforms.ts) */
+function PlatformCheckboxes({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  return (
+    <div className={s.platWrap}>
+      {PLATFORMS.map(({ code, label }) => {
+        const on = value.includes(code)
+        return (
+          <label key={code} className={`${s.platLbl} ${on ? s.platOn : ''}`}>
+            <input type="checkbox" checked={on}
+              onChange={(e) => onChange(e.target.checked ? [...value, code] : value.filter((x) => x !== code))} />
+            {label}
+          </label>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function AdminClient({ initGames, initJournalists, initReports, initCriticReviews, initNews, collections, curationSettings, featuredGameId: initFeatId }: Props) {
@@ -296,7 +314,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
         developer: editGame.developer, description: editGame.description?.trim() || null,
         year: editGame.year, release_date: editGame.release_date || null,
         genre: editGame.genre, status: editGame.status,
-        cover_url: coverUrl,
+        cover_url: coverUrl, platforms: editGame.platforms,
       })
       setGames(games.map((g) => (g.id === data.id ? data : g)))
       setEditGame(null); setEditFile(null); setEditPreview('')
@@ -570,12 +588,12 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                             <div><div className={s.gameName}>{g.title}</div><div className={s.gameDev}>{g.developer}</div></div>
                           </div></td>
                           <td><span style={{ fontSize: '0.78rem' }}>{g.genre}</span></td>
-                          <td>{g.platforms.map((p) => <span key={p} className={`${s.badge} ${s.bGray}`} style={{ marginRight: 2, fontSize: '0.58rem' }}>{p}</span>)}</td>
+                          <td>{platformLabels(g.platforms).map((p) => <span key={p} className={`${s.badge} ${s.bGray}`} style={{ marginRight: 2, fontSize: '0.58rem', textTransform: 'none' }}>{p}</span>)}</td>
                           <td><span style={{ fontFamily: "'DM Mono',monospace", fontSize: '0.78rem' }}>{g.year}</span></td>
                           <td><span className={`${s.chip} ${scoreChipClass(g.critic_score)}`}>{g.critic_score ?? 'TBD'}</span></td>
                           <td><span className={`${s.badge} ${sb.cls}`}>{sb.label}</span></td>
                           <td>
-                            <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} style={{ marginRight: 4 }} onClick={() => { setEditGame(g); setEditFile(null); setEditPreview(g.cover_url ?? '') }}>수정</button>
+                            <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} style={{ marginRight: 4 }} onClick={() => { setEditGame({ ...g, platforms: g.platforms.map(normalizePlatform) }); setEditFile(null); setEditPreview(g.cover_url ?? '') }}>수정</button>
                             <button className={`${s.btn} ${s.btnDanger} ${s.btnSm}`} onClick={() => deleteGame(g.id, g.title)}>삭제</button>
                           </td>
                         </tr>
@@ -637,7 +655,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                           </div>
                           <div className={s.igdbCardTags}>
                             {r.genre && <span className={s.igdbTagGenre}>{r.genre}</span>}
-                            {r.platforms.slice(0, 3).map((p) => (
+                            {platformLabels(r.platforms).slice(0, 3).map((p) => (
                               <span key={p} className={s.igdbTagPlat}>{p}</span>
                             ))}
                             {r.platforms.length > 3 && (
@@ -726,15 +744,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                   </div>
 
                   <div className={s.formSectionTitle} style={{ marginTop: '1rem' }}>플랫폼 <span className={s.req}>*</span></div>
-                  <div className={s.platWrap}>
-                    {PLATFORMS.map((p) => (
-                      <label key={p} className={`${s.platLbl} ${fPlats.includes(p) ? s.platOn : ''}`}>
-                        <input type="checkbox" checked={fPlats.includes(p)}
-                          onChange={(e) => setFPlats(e.target.checked ? [...fPlats, p] : fPlats.filter((x) => x !== p))} />
-                        {p}
-                      </label>
-                    ))}
-                  </div>
+                  <PlatformCheckboxes value={fPlats} onChange={setFPlats} />
                   {fErrors.plat && <span className={s.formError}>{fErrors.plat}</span>}
 
                   <div className={s.formSectionTitle} style={{ marginTop: '1rem' }}>미디어</div>
@@ -795,7 +805,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                   <div className={s.featCur} style={{ margin: '1rem 1.2rem' }}>
                     {featured.cover_url && <img src={featured.cover_url} alt={featured.title} className={s.featCurImg} />}
                     <div>
-                      <div className={s.featCurLabel}>현재 노출 중</div>
+                      <div className={s.featCurLabel}>현재 노출 중{featured.status === 'upcoming' && ' · 출시 예정'}</div>
                       <div className={s.featCurTitle}>{featured.title}</div>
                       <div className={s.featCurSub}>{featured.developer} · {featured.year}</div>
                     </div>
@@ -808,9 +818,11 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-muted-light)' }}>게임을 클릭해서 선택하세요</span>
                 </div>
                 <div className={s.featGrid}>
-                  {games.filter((g) => g.status === 'published').map((g) => (
+                  {/* 공개 + 출시 예정 게임 (임시저장 제외) */}
+                  {games.filter((g) => g.status === 'published' || g.status === 'upcoming').map((g) => (
                     <div key={g.id} className={`${s.fcard} ${tmpFeatId === g.id ? s.fcardSel : ''}`} onClick={() => setTmpFeatId(g.id)}>
                       {tmpFeatId === g.id && <div className={s.fcardChk}>✓</div>}
+                      {g.status === 'upcoming' && <div className={s.fcardUpcoming}>출시 예정</div>}
                       {g.cover_url && <img src={g.cover_url} alt={g.title} />}
                       <div className={s.fcardBody}>
                         <div className={s.fcardTitle}>{g.title}</div>
@@ -984,6 +996,10 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                 <label className={s.formLabel}>게임 소개</label>
                 <TranslatableDescription key={editGame.id} value={editGame.description ?? ''}
                   onChange={(v) => setEditGame((g) => (g ? { ...g, description: v } : g))} placeholder="게임에 대한 간략한 소개..." />
+              </div>
+              <div className={s.formGroup}>
+                <label className={s.formLabel}>플랫폼</label>
+                <PlatformCheckboxes value={editGame.platforms} onChange={(v) => setEditGame({ ...editGame, platforms: v })} />
               </div>
               <div className={s.formGroup}>
                 <label className={s.formLabel}>상태</label>

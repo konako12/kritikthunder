@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { scoreClass } from '@/lib/utils'
-import { PLATFORM_TABS, parsePlatform, platformLabel } from '@/lib/platforms'
+import { PLATFORM_GROUPS, parsePlatform, platformCodesInGroup, platformLabels, type PlatformGroup } from '@/lib/platforms'
 import type { Game } from '@/lib/types'
 import s from './releases.module.css'
 
@@ -15,7 +15,7 @@ type SearchParams = Promise<{ month?: string; platform?: string }>
 interface Filters {
   year: number
   month: number // 1–12
-  platform: string | null
+  platform: PlatformGroup | null
 }
 
 /** 한국 시간 기준 오늘 (YYYY-MM-DD) */
@@ -81,8 +81,10 @@ export default async function ReleasesPage({ searchParams }: { searchParams: Sea
     .order('year')
     .order('title')
   if (filters.platform) {
-    monthQ = monthQ.contains('platforms', [filters.platform])
-    tbdQ = tbdQ.contains('platforms', [filters.platform])
+    // 묶음(예: Xbox = Series X|S + One) 중 하나라도 지원하면 포함
+    const codes = platformCodesInGroup(filters.platform)
+    monthQ = monthQ.overlaps('platforms', codes)
+    tbdQ = tbdQ.overlaps('platforms', codes)
   }
   const [monthRes, tbdRes] = await Promise.all([monthQ, tbdQ])
   const monthGames: Game[] = monthRes.data ?? []
@@ -134,7 +136,7 @@ export default async function ReleasesPage({ searchParams }: { searchParams: Sea
         {/* 플랫폼 필터 */}
         <div className={s.chips}>
           <Link href={hrefWith(filters, { platform: null })} className={`${s.chip} ${!filters.platform ? s.chipActive : ''}`}>전체</Link>
-          {PLATFORM_TABS.map((p) => (
+          {PLATFORM_GROUPS.map((p) => (
             <Link key={p.value} href={hrefWith(filters, { platform: p.value })} className={`${s.chip} ${filters.platform === p.value ? s.chipActive : ''}`}>
               {p.label}
             </Link>
@@ -214,7 +216,7 @@ function GameRow({ game: g, showScore, note }: { game: Game; showScore: boolean;
         <span className={s.title}>{g.title}</span>
         <span className={s.meta}>{note ?? g.developer}</span>
         <span className={s.tags}>
-          {g.platforms.map((p) => <span key={p} className={s.tag}>{platformLabel(p)}</span>)}
+          {platformLabels(g.platforms).map((p) => <span key={p} className={s.tag}>{p}</span>)}
         </span>
       </span>
       {showScore && <span className={`${s.scoreChip} ${scoreClass(g.critic_score)}`}>{g.critic_score}</span>}

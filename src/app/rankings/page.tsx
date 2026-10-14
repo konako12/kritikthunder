@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { scoreClass } from '@/lib/utils'
-import { PLATFORM_TABS, parsePlatform, platformLabel } from '@/lib/platforms'
+import { PLATFORM_GROUPS, inPlatformGroup, parsePlatform, platformGroupLabel, platformLabels, type PlatformGroup } from '@/lib/platforms'
 import { byScore, criticVsUser, loadGameStats, type VsRow } from '@/lib/curation'
 import s from './rankings.module.css'
 
@@ -19,7 +19,7 @@ type SearchParams = Promise<{ tab?: string; year?: string; platform?: string; pa
 interface Filters {
   tab: Tab
   year: number | null
-  platform: string | null
+  platform: PlatformGroup | null
   page: number
 }
 
@@ -32,7 +32,7 @@ function parseFilters(sp: Awaited<SearchParams>): Filters {
 }
 
 function buildTitle({ tab, year, platform }: Filters): string {
-  const parts = [year && `${year}년`, platform && platformLabel(platform)].filter(Boolean)
+  const parts = [year && `${year}년`, platform && platformGroupLabel(platform)].filter(Boolean)
   if (tab === 'vs') return [...parts, '평론가 vs 유저'].join(' ')
   return parts.length ? `${parts.join(' ')} 최고의 게임` : '역대 최고의 게임'
 }
@@ -64,7 +64,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
 
   const ranked = all
     .filter((g) => !filters.year || g.year === filters.year)
-    .filter((g) => !filters.platform || g.platforms.includes(filters.platform))
+    .filter((g) => !filters.platform || inPlatformGroup(g.platforms, filters.platform))
     .sort(byScore)
   const vs = criticVsUser(ranked, settings)
 
@@ -130,7 +130,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
             <span className={s.filterLabel}>플랫폼</span>
             <div className={s.chips}>
               <Link href={hrefWith(filters, { platform: null })} className={`${s.chip} ${!filters.platform ? s.chipActive : ''}`}>전체</Link>
-              {PLATFORM_TABS.map((p) => (
+              {PLATFORM_GROUPS.map((p) => (
                 <Link key={p.value} href={hrefWith(filters, { platform: p.value })} className={`${s.chip} ${filters.platform === p.value ? s.chipActive : ''}`}>
                   {p.label}
                 </Link>
@@ -178,8 +178,8 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
                       </div>
                       <div className={s.tags}>
                         <span className={s.tag}>{g.genre}</span>
-                        {g.platforms.map((p) => (
-                          <span key={p} className={`${s.tag} ${s.tagPlatform}`}>{platformLabel(p)}</span>
+                        {platformLabels(g.platforms).map((p) => (
+                          <span key={p} className={`${s.tag} ${s.tagPlatform}`}>{p}</span>
                         ))}
                       </div>
                     </div>
@@ -214,7 +214,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
                       <span className={s.meta}>{g.developer} · {g.year}</span>
                     </span>
                     <span className={s.genreCol}>{g.genre}</span>
-                    <span className={s.platformCol}>{g.platforms.map(platformLabel).join(' · ')}</span>
+                    <span className={s.platformCol}>{platformLabels(g.platforms).join(' · ')}</span>
                     <span className={s.scoreCol}>
                       <span className={`${s.scoreChip} ${scoreClass(g.critic_score)}`}>{g.critic_score}</span>
                     </span>

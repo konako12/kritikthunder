@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
+import type { PlatformCode } from '@/lib/platforms'
 
 // ── Twitch 토큰 인-프로세스 캐시 (만료 1분 전 갱신) ──────────────
 let tokenCache: { token: string; expiresAt: number } | null = null
@@ -28,19 +29,20 @@ async function getTwitchToken(): Promise<string> {
   return tokenCache.token
 }
 
-// ── IGDB 플랫폼 ID → 사이트 기준 플랫폼 변환 ──────────────────────
-const PLATFORM_MAP: Record<number, string> = {
-  167: 'PS5',
-  48:  'PS4',
-  169: 'Xbox',   // Xbox Series X|S
-  11:  'Xbox',   // Xbox One
-  12:  'Xbox',   // Xbox 360
-  6:   'PC',     // Windows
-  3:   'PC',     // Linux
-  14:  'PC',     // Mac
-  130: 'Switch',
-  34:  'Mobile', // Android
-  39:  'Mobile', // iOS
+// ── IGDB 플랫폼 ID → 사이트 플랫폼 코드 (src/lib/platforms.ts) ─────────
+// ID는 IGDB /platforms 기준. 11(초대 Xbox) · 12(Xbox 360)처럼 목록에 없는 기종은 넣지 않음
+const PLATFORM_MAP: Record<number, PlatformCode> = {
+  167: 'ps5',          // PlayStation 5
+  48:  'ps4',          // PlayStation 4
+  169: 'xbox-series',  // Xbox Series X|S
+  49:  'xbox-one',     // Xbox One
+  6:   'pc',           // PC (Windows)
+  3:   'pc',           // Linux
+  14:  'pc',           // Mac
+  130: 'switch',       // Nintendo Switch
+  508: 'switch-2',     // Nintendo Switch 2
+  34:  'mobile',       // Android
+  39:  'mobile',       // iOS
 }
 
 // ── IGDB 장르 ID → 사이트 한국어 장르 변환 ────────────────────────

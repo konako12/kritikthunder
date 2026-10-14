@@ -156,6 +156,13 @@
   line-height: 0.9; padding: calc(0.08rem + 0.1em) 0.5rem 0.08rem; border-radius: 5px;
 }
 .heroScoreLabel { font-size: 0.67rem; color: var(--text-sub); }
+/* 메인 노출 게임이 출시 예정일 때 — 점수 대신 */
+.heroUpcoming {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em;
+  padding: 0.3rem 0.7rem; border-radius: 5px;
+  background: var(--gold); color: #1a1200;
+}
+.heroReleaseDate { font-family: 'DM Mono', monospace; font-size: 0.9rem; color: var(--text); letter-spacing: 0.04em; }
 .heroDivider { width: 1px; height: 20px; background: var(--border-hi); }
 .heroTag {
   padding: 0.2rem 0.6rem; border-radius: 3px;

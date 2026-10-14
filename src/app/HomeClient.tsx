@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import type { Game, CriticReview, NewsWithGame } from '@/lib/types'
-import { scoreClass, sourceDomain, gameTitleMatches } from '@/lib/utils'
+import { scoreClass, sourceDomain, gameTitleMatches, formatReleaseDate } from '@/lib/utils'
+import { PLATFORM_GROUPS, inPlatformGroup, platformLabels, type PlatformGroup } from '@/lib/platforms'
 import type { Collection } from '@/lib/curation'
 import CollectionCard from './collections/CollectionCard'
 import HeroAccolades from './HeroAccolades'
@@ -55,7 +56,9 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
         .slice(0, 5)
     : []
 
-  const pfGames = pf === 'all' ? allGames : allGames.filter((g) => g.platforms.includes(pf))
+  const pfGames = pf === 'all' ? allGames : allGames.filter((g) => inPlatformGroup(g.platforms, pf as PlatformGroup))
+  // 메인 노출 게임이 출시 예정이면 점수 대신 출시 예정 배지 + 출시일
+  const featuredUpcoming = featured?.status === 'upcoming'
 
   return (
     <div className={s.root}>
@@ -121,7 +124,13 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
               <div className={s.heroBadge}>▶ &nbsp;이번 주 에디터 픽</div>
               <h1 className={s.heroTitle}>{featured.title}</h1>
               <div className={s.heroInfo}>
-                {featured.critic_score !== null && (
+                {featuredUpcoming ? (
+                  <>
+                    <div className={s.heroUpcoming}>출시 예정</div>
+                    <div className={s.heroReleaseDate}>{formatReleaseDate(featured)}</div>
+                    <div className={s.heroDivider} />
+                  </>
+                ) : featured.critic_score !== null && (
                   <>
                     <div className={`${s.heroScore} ${scoreClass(featured.critic_score)}`}>
                       {featured.critic_score}
@@ -130,7 +139,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
                     <div className={s.heroDivider} />
                   </>
                 )}
-                {featured.platforms.map((p) => (
+                {platformLabels(featured.platforms).map((p) => (
                   <span key={p} className={s.heroTag}>{p}</span>
                 ))}
                 <span className={s.heroTag}>{featured.genre}</span>
@@ -139,11 +148,11 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
                 <p className={s.heroDesc}>{featured.description}</p>
               )}
               <div className={s.heroBtns}>
-                <Link href={`/games/${featured.id}`} className={s.btnPrimary}>리뷰 보기</Link>
+                <Link href={`/games/${featured.id}`} className={s.btnPrimary}>{featuredUpcoming ? '게임 정보 보기' : '리뷰 보기'}</Link>
                 <button className={s.btnGhost}>+ 위시리스트</button>
               </div>
             </div>
-            {featured.critic_score !== null && (
+            {!featuredUpcoming && featured.critic_score !== null && (
               <HeroAccolades total={featured.critic_score} reviews={heroReviews} />
             )}
           </div>
@@ -177,7 +186,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
                   <div className={s.top5T}>{g.title}</div>
                   <div className={s.top5M}>{g.developer} · {g.year}</div>
                   <div className={s.top5Tags}>
-                    {g.platforms.slice(0, 3).map((p) => <span key={p} className={s.tt}>{p}</span>)}
+                    {platformLabels(g.platforms).slice(0, 3).map((p) => <span key={p} className={s.tt}>{p}</span>)}
                     <span className={s.tt}>{g.genre}</span>
                   </div>
                 </div>
@@ -321,7 +330,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
                       <div className={s.ucD}>{u.developer}</div>
                       {/* 정확한 날짜가 있으면 2026.10.15, 연도만 있으면 연도만 */}
                       <div className={s.ucTbd}>
-                        {u.release_date ? u.release_date.replaceAll('-', '.') : `TBD · ${u.year}년 예정`}
+                        {u.release_date ? formatReleaseDate(u) : `TBD · ${u.year}년 예정`}
                       </div>
                     </div>
                   </div>
@@ -341,13 +350,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
             <Link href="/games" className={s.rowMore}>전체 보기 →</Link>
           </div>
           <div className={s.pfStrip}>
-            {[
-              { key: 'all',    icon: '🎮', label: '전체' },
-              { key: 'PS5',    icon: '🟦', label: 'PS5' },
-              { key: 'Xbox',   icon: '🟩', label: 'Xbox' },
-              { key: 'PC',     icon: '💻', label: 'PC' },
-              { key: 'Mobile', icon: '📱', label: '모바일' },
-            ].map(({ key, icon, label }) => (
+            {[{ value: 'all', icon: '🎮', label: '전체' }, ...PLATFORM_GROUPS].map(({ value: key, icon, label }) => (
               <button
                 key={key}
                 className={`${s.pfBtn} ${pf === key ? s.pfBtnActive : ''}`}

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Game, CriticReview, UserReview, NewsWithGame } from '@/lib/types'
 import { scoreClass, formatDate, initial, sourceDomain } from '@/lib/utils'
 import { createClient } from '@/lib/supabase-client'
+import { platformLabels } from '@/lib/platforms'
 import NewsCard from '@/components/news/NewsCard'
 import ns from '@/components/news/news.module.css'
 import s from './page.module.css'
@@ -110,7 +111,7 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
               {game.developer} · {game.publisher ?? game.developer} · {game.year}
             </div>
             <div className={s.tags}>
-              {game.platforms.map((p) => (
+              {platformLabels(game.platforms).map((p) => (
                 <span key={p} className={`${s.tag} ${s.platform}`}>{p}</span>
               ))}
               <span className={s.tag}>{game.genre}</span>
@@ -316,7 +317,7 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
                 ['개발사', game.developer],
                 ['배급사', game.publisher ?? game.developer],
                 ['출시연도', `${game.year}년`],
-                ['플랫폼', game.platforms.join(' / ')],
+                ['플랫폼', platformLabels(game.platforms).join(' / ')],
                 ['장르', game.genre],
                 ['이용등급', game.age_rating],
               ].map(([k, v]) => (

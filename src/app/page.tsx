@@ -49,7 +49,7 @@ export default async function HomePage() {
       : a.year - b.year || a.title.localeCompare(b.title)
     )
   const top5      = [...published].sort((a, b) => (b.critic_score ?? 0) - (a.critic_score ?? 0)).slice(0, 5)
-  const featured  = games.find((g) => g.id === featuredId) ?? published[0]
+  const featured  = games.find((g) => g.id === featuredId && (g.status === 'published' || g.status === 'upcoming')) ?? published[0]
 
   // 히어로 어콜레이드 — 에디터 픽 게임의 최신 전문가 리뷰 6개
   const heroReviewsRes = featured
