@@ -11,9 +11,10 @@ import { NEWS_MEDIA_MAX, NEWS_SUMMARY_MAX, NEWS_TITLE_MAX } from '@/lib/news'
  */
 
 const TIMEOUT_MS = 8000
-const MAX_BYTES = 1_500_000   // <head>만 필요하므로 앞부분만 읽음
+const MAX_BYTES = 1_500_000   // 본문 첫 이미지까지 찾을 수 있게 넉넉히, 그래도 상한은 둠
 const MAX_REDIRECTS = 4
-const USER_AGENT = 'Mozilla/5.0 (compatible; KritikNewsFetcher/1.0; 관리자 수동 등록)'
+// HTTP 헤더에는 ASCII만 쓸 수 있음 — 한글이 들어가면 fetch가 요청 전에 TypeError로 실패한다
+const USER_AGENT = 'Mozilla/5.0 (compatible; KritikNewsFetcher/1.0; manual admin request)'
 
 /** 사설·예약 대역 주소인지 (서버 내부망 접근 차단) */
 function isPrivateAddress(ip: string): boolean {
@@ -50,8 +51,8 @@ async function assertPublicUrl(u: URL) {
   }
 }
 
-/** 리다이렉트를 한 단계씩 검사하며 HTML 앞부분만 읽기 */
-async function fetchHead(startUrl: string): Promise<{ html: string; finalUrl: string }> {
+/** 리다이렉트를 한 단계씩 검사하며 HTML 읽기 (MAX_BYTES까지) */
+async function fetchPage(startUrl: string): Promise<{ html: string; finalUrl: string }> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
   try {
@@ -76,7 +77,7 @@ async function fetchHead(startUrl: string): Promise<{ html: string; finalUrl: st
       const type = res.headers.get('content-type') ?? ''
       if (type && !/html/i.test(type)) throw new Error('HTML 페이지가 아니에요')
 
-      // 앞부분만 읽기
+      // 상한까지만 읽기
       const chunks: Uint8Array[] = []
       let size = 0
       const reader = res.body?.getReader()
@@ -86,8 +87,6 @@ async function fetchHead(startUrl: string): Promise<{ html: string; finalUrl: st
           if (done) break
           chunks.push(value)
           size += value.length
-          // </head>가 나오면 그만 읽음
-          if (Buffer.from(value).toString('latin1').toLowerCase().includes('</head>')) break
         }
         reader.cancel().catch(() => {})
       }
@@ -157,11 +156,84 @@ function toKstDate(v: string | undefined): string | null {
 function absoluteHttpUrl(v: string | undefined, base: string): string | null {
   if (!v) return null
   try {
-    const u = new URL(v, base)
+    const u = new URL(v.trim(), base)
     return u.protocol === 'http:' || u.protocol === 'https:' ? u.toString() : null
   } catch {
     return null
   }
+}
+
+function tagAttrs(tag: string): Record<string, string> {
+  const attrs: Record<string, string> = {}
+  for (const m of tag.matchAll(/([\w:-]+)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/g)) {
+    attrs[m[1].toLowerCase()] = decodeEntities(m[3] ?? m[4] ?? m[5] ?? '')
+  }
+  return attrs
+}
+
+/** 로고 · 아이콘 · 버튼 · 광고 이미지로 보이는 주소 */
+const NON_ARTICLE_SRC =
+  /logo|icon|ico[_-]|favicon|btn[_-]|button|banner|sprite|blank|spacer|placeholder|emoji|avatar|gnb|lnb|(^|[\W_])ads?([\W_]|$)|advert|doubleclick|googlesyndication|adservice|pixel|tracker|\.svg(\?|$)|\.gif(\?|$)/i
+/** 메뉴 · 공유 버튼 · 프로필 등으로 보이는 class/id/alt */
+const NON_ARTICLE_ATTR = /logo|icon|btn|button|banner|gnb|lnb|nav|menu|header|footer|share|sns|profile|badge|ad[_-]|advert/i
+
+/** width 속성 · style의 width로 추정한 가로 크기 (모르면 null) */
+function estimatedWidth(a: Record<string, string>): number | null {
+  const w = /^\s*(\d+)(px)?\s*$/i.exec(a.width ?? '')?.[1] ?? /(?:^|;)\s*width\s*:\s*(\d+)px/i.exec(a.style ?? '')?.[1]
+  if (w) return Number(w)
+  // 주소에 크기가 들어간 경우 (예: _100x100, /w150/)
+  const fromUrl = /[_\-/](\d{2,4})x\d{2,4}[_\-./]|[/_-]w(\d{2,4})[/_.-]/i.exec(a.src ?? '')
+  return fromUrl ? Number(fromUrl[1] ?? fromUrl[2]) : null
+}
+
+/** 기사 본문의 첫 번째 쓸 만한 이미지 — 로고·아이콘·광고·가로 300px 미만 제외 */
+function firstArticleImage(html: string, base: string): string | null {
+  const bodyStart = html.search(/<\/head>/i)
+  const body = bodyStart >= 0 ? html.slice(bodyStart) : html
+  // <article> 또는 본문 영역이 있으면 거기서 먼저 찾음
+  const articleStart = body.search(/<article\b|class=["'][^"']*(article|news_?view|view_?con|post-?content|entry-content|news_?body)[^"']*["']/i)
+  const scopes = articleStart >= 0 ? [body.slice(articleStart), body] : [body]
+
+  for (const scope of scopes) {
+    let unknownSize: string | null = null
+    for (const tag of scope.match(/<img\b[^>]*>/gi) ?? []) {
+      const a = tagAttrs(tag)
+      // 지연 로딩 이미지는 실제 주소가 data-* 속성에 있음
+      const src = a['data-src'] || a['data-original'] || a['data-lazy-src'] || a.src || ''
+      if (!src || src.startsWith('data:')) continue
+      if (NON_ARTICLE_SRC.test(src) || NON_ARTICLE_ATTR.test(`${a.class ?? ''} ${a.id ?? ''} ${a.alt ?? ''}`)) continue
+      const abs = absoluteHttpUrl(src, base)
+      if (!abs) continue
+      const w = estimatedWidth({ ...a, src })
+      if (w !== null && w < 300) continue
+      if (w !== null) return abs           // 크기가 확인된 큰 이미지 우선
+      unknownSize ??= abs                  // 크기를 모르면 후보로만 기억
+    }
+    if (unknownSize) return unknownSize
+  }
+  return null
+}
+
+/** http 이미지는 https로 먼저 시도 — 열리면 https 주소를 사용 */
+async function preferHttps(url: string | null): Promise<string | null> {
+  if (!url || !url.startsWith('http://')) return url
+  const https = 'https://' + url.slice('http://'.length)
+  try {
+    const u = new URL(https)
+    await assertPublicUrl(u)
+    const res = await fetch(u, {
+      method: 'GET',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(4000),
+      // 공개 화면과 같은 조건(리퍼러 없음)으로 확인
+      headers: { 'User-Agent': USER_AGENT, Accept: 'image/*', Range: 'bytes=0-0' },
+    })
+    res.body?.cancel().catch(() => {})
+    if ((res.ok || res.status === 206) && /^image\//i.test(res.headers.get('content-type') ?? '')) return https
+  } catch {
+    // https가 안 되면 원래 http 주소 유지
+  }
+  return url
 }
 
 export async function POST(req: NextRequest) {
@@ -177,21 +249,34 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { html, finalUrl } = await fetchHead(target.toString())
+    const { html, finalUrl } = await fetchPage(target.toString())
     const meta = parseMeta(html)
+
+    // 대표 이미지: og:image → twitter:image → 본문 첫 이미지
+    const candidates: [string, string | null][] = [
+      ['og:image', absoluteHttpUrl(meta['og:image:secure_url'] ?? meta['og:image'] ?? meta['og:image:url'], finalUrl)],
+      ['twitter:image', absoluteHttpUrl(meta['twitter:image'] ?? meta['twitter:image:src'], finalUrl)],
+      ['본문 첫 이미지', firstArticleImage(html, finalUrl)],
+    ]
+    const [imageFrom, picked] = candidates.find(([, v]) => v) ?? [null, null]
+
     const result = {
       title: clip(meta['og:title'], NEWS_TITLE_MAX),
       media: clip(meta['og:site_name'], NEWS_MEDIA_MAX),
       summary: clip(meta['og:description'], NEWS_SUMMARY_MAX),
-      image_url: absoluteHttpUrl(meta['og:image'] ?? meta['og:image:url'], finalUrl),
+      image_url: await preferHttps(picked),
+      image_from: imageFrom,
       published_at: toKstDate(meta['article:published_time']),
     }
     return NextResponse.json(result)
   } catch (e) {
-    const err = e as Error & { code?: string }
+    const err = e as Error & { code?: string; cause?: { code?: string } }
+    // 원인 파악용 서버 로그 (관리자 화면에는 쉬운 문구만)
+    console.error('[news/fetch-meta]', target.toString(), err.name, err.message, err.cause?.code ?? '')
+    const code = err.code ?? err.cause?.code
     const msg =
-      err.name === 'AbortError' ? '원문 페이지 응답이 너무 늦어요'
-      : err.code === 'ENOTFOUND' ? '원문 사이트 주소를 찾을 수 없어요'
+      err.name === 'AbortError' || err.name === 'TimeoutError' ? '원문 페이지 응답이 너무 늦어요'
+      : code === 'ENOTFOUND' ? '원문 사이트 주소를 찾을 수 없어요'
       : err instanceof TypeError ? '원문 페이지에 연결하지 못했어요'
       : err.message || '원문 페이지를 불러오지 못했어요'
     return NextResponse.json({ error: msg }, { status: 422 })

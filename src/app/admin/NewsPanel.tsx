@@ -39,8 +39,12 @@ interface MetaResult {
   media: string | null
   summary: string | null
   image_url: string | null
+  /** 이미지를 찾은 곳: og:image · twitter:image · 본문 첫 이미지 */
+  image_from: string | null
   published_at: string | null
 }
+
+const NO_IMAGE_MSG = '원문 이미지를 가져오지 못했어요, 직접 업로드해 주세요.'
 
 const EMPTY: Draft = {
   id: null, source_url: '', title: '', media: '', summary: '', published_at: '',
@@ -48,7 +52,7 @@ const EMPTY: Draft = {
   status: 'draft', is_pinned: false, sort_order: 0,
 }
 
-const META_LABEL: Record<keyof MetaResult, string> = {
+const META_LABEL: Record<Exclude<keyof MetaResult, 'image_from'>, string> = {
   title: '기사 제목', media: '매체명', summary: '첫 문단', image_url: '대표 이미지', published_at: '원문 게재일',
 }
 
@@ -91,6 +95,9 @@ export default function NewsPanel({ games, news, setNews, showToast }: Props) {
   const [fetchedUrl, setFetchedUrl] = useState('')
   const [fetchNotice, setFetchNotice] = useState<{ ok: boolean; text: string } | null>(null)
 
+  // 목록에서 원문 이미지 다시 불러오기 중인 뉴스
+  const [refetchingId, setRefetchingId] = useState<number | null>(null)
+
   // 이미지 교체
   const [imgMenu, setImgMenu] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -130,7 +137,8 @@ export default function NewsPanel({ games, news, setNews, showToast }: Props) {
     setFetchNotice(null)
     try {
       const meta: MetaResult = await request('/api/admin/news/fetch-meta', 'POST', { url })
-      const missing = (Object.keys(META_LABEL) as (keyof MetaResult)[]).filter((k) => !meta[k])
+      const missing = (Object.keys(META_LABEL) as (keyof typeof META_LABEL)[]).filter((k) => !meta[k])
+      const others = missing.filter((k) => k !== 'image_url')
       patch({
         ...(meta.title && { title: meta.title }),
         ...(meta.media && { media: meta.media }),
@@ -138,14 +146,19 @@ export default function NewsPanel({ games, news, setNews, showToast }: Props) {
         ...(meta.published_at && { published_at: meta.published_at }),
         ...(meta.image_url && { image_url: meta.image_url, image_source: 'original', original_image_url: meta.image_url }),
       })
+      const parts = [
+        others.length > 0 && `원문에서 ${others.map((k) => META_LABEL[k]).join(', ')}을(를) 찾지 못했어요. 해당 칸은 직접 입력해주세요.`,
+        !meta.image_url && NO_IMAGE_MSG,
+        meta.image_url && meta.image_from && meta.image_from !== 'og:image' && `대표 이미지는 ${meta.image_from}에서 가져왔어요.`,
+      ].filter(Boolean)
       setFetchNotice(
         missing.length === 0
-          ? { ok: true, text: '원문 정보를 불러왔어요. 내용을 확인하고 필요하면 고쳐주세요.' }
-          : { ok: false, text: `원문에서 ${missing.map((k) => META_LABEL[k]).join(', ')}을(를) 찾지 못했어요. 해당 칸은 직접 입력해주세요.` }
+          ? { ok: true, text: ['원문 정보를 불러왔어요. 내용을 확인하고 필요하면 고쳐주세요.', ...parts].join(' ') }
+          : { ok: false, text: parts.join(' ') }
       )
       setFetchedUrl(url) // 성공한 주소는 다시 불러오지 않음
     } catch (e) {
-      setFetchNotice({ ok: false, text: `${(e as Error).message}. 각 항목을 직접 입력해주세요.` })
+      setFetchNotice({ ok: false, text: `${(e as Error).message}. ${NO_IMAGE_MSG} 다른 항목도 직접 입력해주세요.` })
     } finally {
       setFetching(false)
     }
@@ -219,6 +232,26 @@ export default function NewsPanel({ games, news, setNews, showToast }: Props) {
       showToast(msg)
     } catch (err) {
       showToast(`⚠️ ${(err as Error).message}`)
+    }
+  }
+
+  // ── 이미 등록한 뉴스의 원문 이미지 다시 불러오기 (누를 때만 1회)
+  async function refetchImage(n: News) {
+    setRefetchingId(n.id)
+    try {
+      const meta: MetaResult = await request('/api/admin/news/fetch-meta', 'POST', { url: n.source_url })
+      if (!meta.image_url) { showToast(`⚠️ ${NO_IMAGE_MSG}`); return }
+      // 이미지가 없던 뉴스는 원문 이미지로 표시, 직접 고른 이미지가 있으면 되돌리기용 원문 주소만 저장
+      const body = n.image_url
+        ? { original_image_url: meta.image_url }
+        : { image_url: meta.image_url, image_source: 'original', original_image_url: meta.image_url }
+      const data: News = await request(`/api/admin/news/${n.id}`, 'PATCH', body)
+      setNews(news.map((x) => (x.id === n.id ? data : x)))
+      showToast(n.image_url ? '🖼️ 원문 이미지를 찾았어요 — 수정 화면에서 되돌릴 수 있어요' : '🖼️ 원문 이미지를 불러왔어요')
+    } catch (err) {
+      showToast(`⚠️ ${(err as Error).message}. ${NO_IMAGE_MSG}`)
+    } finally {
+      setRefetchingId(null)
     }
   }
 
@@ -524,6 +557,13 @@ export default function NewsPanel({ games, news, setNews, showToast }: Props) {
                       onClick={() => quickPatch(n, { is_pinned: !n.is_pinned }, n.is_pinned ? '고정을 해제했어요' : '📌 메인에 고정했어요')}>
                       {n.is_pinned ? '고정 해제' : '고정'}
                     </button>
+                    {!n.original_image_url && (
+                      <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} style={{ marginRight: 4 }}
+                        onClick={() => refetchImage(n)} disabled={refetchingId === n.id}
+                        title="원문 페이지를 한 번 읽어 대표 이미지를 다시 찾아요">
+                        {refetchingId === n.id ? '불러오는 중...' : '이미지 다시 불러오기'}
+                      </button>
+                    )}
                     <button className={`${s.btn} ${s.btnDanger} ${s.btnSm}`} onClick={() => remove(n)}>삭제</button>
                   </td>
                 </tr>
