@@ -137,7 +137,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
   const [toast, setToast] = useState('')
   const showToast = (msg: string) => {
     setToast(msg)
-    setTimeout(() => setToast(''), 2800)
+    setTimeout(() => setToast(''), msg.includes('⚠️') ? 6000 : 2800) // 경고는 읽을 시간 넉넉히
   }
 
   // 확인 다이얼로그
@@ -322,19 +322,29 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
     } catch (e: unknown) { showToast(`⚠️ ${(e as Error).message}`) }
   }
 
+  /** 승인·거절 후 결과 안내 메일 발송 여부를 함께 알려줌 */
+  function mailNote(mail: { sent: boolean; error?: string } | null | undefined): string {
+    if (!mail) return ''
+    return mail.sent ? ' · 안내 메일을 보냈어요' : ` · ⚠️ 메일 미발송: ${mail.error ?? '알 수 없는 오류'}`
+  }
+
   async function approveJournalist(id: number) {
-    await apiCall(`/api/admin/journalists/${id}`, 'PATCH', { status: 'approved' })
-    setJournalists(journalists.map((j) => j.id === id ? { ...j, status: 'approved' } : j))
-    showToast('✅ 기자가 승인됐어요')
+    try {
+      const data = await apiCall(`/api/admin/journalists/${id}`, 'PATCH', { status: 'approved' })
+      setJournalists(journalists.map((j) => j.id === id ? { ...j, status: 'approved' } : j))
+      showToast('✅ 기자가 승인됐어요' + mailNote(data?.mail))
+    } catch (e) { showToast(`⚠️ ${(e as Error).message}`) }
   }
   async function rejectJournalist(id: number, name: string) {
     setConfirm({
       title: '가입을 거절할까요?',
-      desc: `${name} 기자의 신청을 거절합니다.`,
+      desc: `${name} 기자의 신청을 거절합니다. 신청자에게 결과 안내 메일이 자동으로 발송돼요.`,
       onOk: async () => {
-        await apiCall(`/api/admin/journalists/${id}`, 'PATCH', { status: 'rejected' })
-        setJournalists(journalists.map((j) => j.id === id ? { ...j, status: 'rejected' } : j))
-        showToast(`✗ "${name}" 신청이 거절됐어요`)
+        try {
+          const data = await apiCall(`/api/admin/journalists/${id}`, 'PATCH', { status: 'rejected' })
+          setJournalists(journalists.map((j) => j.id === id ? { ...j, status: 'rejected' } : j))
+          showToast(`✗ "${name}" 신청이 거절됐어요` + mailNote(data?.mail))
+        } catch (e) { showToast(`⚠️ ${(e as Error).message}`) }
       },
     })
   }
