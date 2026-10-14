@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
+import { isAdminEmail } from '@/lib/auth-destination'
 
-/** ADMIN_EMAILS(서버 전용 환경변수)에 포함된 이메일인지 */
-export function isAdminEmail(email: string | null | undefined): boolean {
-  if (!email) return false
-  return (process.env.ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((e) => e.trim())
-    .filter(Boolean)
-    .includes(email)
-}
+// 관리자 이메일 판별 규칙은 auth-destination 하나만 사용
+export { isAdminEmail }
 
 /**
  * 관리자 확인 후 사용자 정보까지 돌려준다 (등록자 기록 등에 사용).

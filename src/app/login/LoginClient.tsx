@@ -32,25 +32,10 @@ export default function LoginClient({ notice = '', initialError = '' }: Props) {
       return
     }
 
-    // 서버에서 역할 판별
+    // 이동할 곳은 서버 규칙(src/lib/auth-destination.ts)이 정함
     const res = await fetch('/api/auth/role')
-    const { role, status } = await res.json()
-
-    if (role === 'admin') {
-      router.push('/admin')
-    } else if (role === 'journalist' && status === 'approved') {
-      router.push('/cms')
-    } else if (role === 'journalist' && status === 'pending') {
-      router.push('/pending')
-    } else if (role === 'journalist' && status === 'rejected') {
-      router.push('/rejected')
-    } else {
-      await supabase.auth.signOut()
-      setError('접근 권한이 없습니다.')
-      setLoading(false)
-      return
-    }
-
+    const { destination } = await res.json().catch(() => ({ destination: '/no-access' }))
+    router.replace(destination ?? '/no-access')
     router.refresh()
   }
 

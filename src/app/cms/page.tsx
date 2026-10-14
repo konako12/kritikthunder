@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase-server'
+import { createClient, createAdminClient } from '@/lib/supabase-server'
+import { resolveDestination } from '@/lib/auth-destination'
 import CmsClient from './CmsClient'
 
 export default async function CmsPage() {
@@ -11,17 +12,17 @@ export default async function CmsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // ── 2. 기자 상태 확인 (이메일 기반)
-  const { data: journalist } = await supabase
+  // ── 2. 승인 기자가 아니면 규칙대로 (관리자 → /admin, 대기 → /pending, 거절 → /rejected, 그 외 → /no-access)
+  const { destination, journalist: found } = await resolveDestination(user)
+  if (destination !== '/cms') redirect(destination)
+
+  // 기자 정보 전체 — 가입 때 저장된 이메일 그대로 조회 (대소문자 차이로 못 찾는 일 방지)
+  const { data: journalist } = await createAdminClient()
     .from('journalists')
     .select('*')
-    .eq('email', user.email!)
-    .maybeSingle()
-
-  if (!journalist) redirect('/login')
-  if (journalist.status === 'pending')  redirect('/pending')
-  if (journalist.status === 'rejected') redirect('/rejected')
-  if (journalist.status !== 'approved') redirect('/login')
+    .eq('email', found!.email)
+    .single()
+  if (!journalist) redirect('/no-access')
 
   // ── 3. 이 기자의 리뷰 목록 (서버에서 미리 로드)
   const [gamesRes, reviewsRes] = await Promise.all([

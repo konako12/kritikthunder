@@ -1,0 +1,47 @@
+/* 승인 대기 · 거절 · 접근 권한 없음 안내 — 로그인 화면과 같은 라이트 카드 */
+.page {
+  min-height: 100vh; background: #f4f5f8;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Sans KR', sans-serif; padding: 16px;
+}
+.card {
+  background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 48px 40px; max-width: 440px; width: 100%; text-align: center;
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.04em;
+  color: #0f172a; margin-bottom: 6px;
+}
+.logo span { color: #2563eb; }
+.icon { font-size: 2.5rem; margin-bottom: 16px; }
+.title { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
+.desc { font-size: 0.88rem; color: #64748b; line-height: 1.7; margin-bottom: 20px; }
+.desc a { color: #2563eb; }
+
+.info {
+  text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 4px 16px; margin-bottom: 20px;
+}
+.infoRow {
+  display: flex; justify-content: space-between; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid #eef2f7; font-size: 0.84rem;
+}
+.infoRow:last-child { border-bottom: none; }
+.infoRow span:first-child { color: #94a3b8; flex-shrink: 0; }
+.infoRow span:last-child { color: #0f172a; font-weight: 500; text-align: right; word-break: break-all; }
+
+.actions { display: flex; flex-direction: column; gap: 8px; }
+.btn, .btnGhost {
+  display: block; padding: 11px 24px; border-radius: 8px;
+  font-size: 0.88rem; font-weight: 500; text-decoration: none; font-family: inherit;
+  cursor: pointer; transition: background 0.15s, border-color 0.15s;
+}
+.btn { background: #2563eb; color: #fff; border: none; }
+.btn:hover { background: #1d4ed8; }
+.btnGhost { background: #fff; color: #475569; border: 1.5px solid #e2e8f0; }
+.btnGhost:hover { border-color: #cbd5e1; background: #f8fafc; }
+.btnGhost:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 480px) {
+  .card { padding: 36px 22px 28px; }
+}

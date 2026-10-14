@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
 import { cookies } from 'next/headers'
+import { resolveDestination } from '@/lib/auth-destination'
 import { RECOVERY_COOKIE, RECOVERY_COOKIE_MAX_AGE, safeNextPath } from '@/lib/auth-recovery'
 
 /**
@@ -29,7 +30,8 @@ export async function GET(req: NextRequest) {
         })
         return NextResponse.redirect(`${origin}/reset-password`)
       }
-      return NextResponse.redirect(`${origin}${next ?? '/pending'}`)
+      const dest = next ?? (await resolveDestination((await supabase.auth.getUser()).data.user)).destination
+      return NextResponse.redirect(`${origin}${dest}`)
     }
   }
 

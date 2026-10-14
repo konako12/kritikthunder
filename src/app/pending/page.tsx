@@ -1,59 +1,47 @@
+export const dynamic = 'force-dynamic'
+
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import StatusCard from '@/components/auth-status/StatusCard'
+import LogoutButton from '@/components/auth-status/LogoutButton'
+import { currentStatus, DESTINATION_LABEL } from '@/components/auth-status/current'
+import s from '@/components/auth-status/status.module.css'
 
-export default function PendingPage() {
+export const metadata: Metadata = { title: '가입 심사 중 | KRITIK' }
+
+/** 승인 대기 안내 — 로그인 검사로 다른 곳에 보내지 않음 (무한 이동 방지) */
+export default async function PendingPage() {
+  const { loggedIn, destination, journalist } = await currentStatus()
+  const isPending = journalist?.status === 'pending'
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f4f5f8',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: "'Noto Sans KR', sans-serif",
-      padding: '16px',
-    }}>
-      <div style={{
-        background: '#fff',
-        borderRadius: 16,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        padding: '48px 40px',
-        maxWidth: 440,
-        width: '100%',
-        textAlign: 'center',
-      }}>
-        <div style={{
-          fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: '2.2rem',
-          letterSpacing: '0.04em',
-          color: '#0f172a',
-          marginBottom: 6,
-        }}>
-          KRIT<span style={{ color: '#2563eb' }}>IK</span>
-        </div>
+    <StatusCard icon="⏳" title={isPending || !loggedIn ? '가입 신청이 접수되어 심사 중입니다' : '심사 중인 신청이 없어요'}>
+      {isPending ? (
+        <>
+          <div className={s.info}>
+            <div className={s.infoRow}><span>이름</span><span>{journalist!.name}</span></div>
+            <div className={s.infoRow}><span>소속 매체</span><span>{journalist!.media}</span></div>
+            <div className={s.infoRow}><span>신청일</span><span>{journalist!.joined_at?.replaceAll('-', '.')}</span></div>
+          </div>
+          <p className={s.desc}>
+            심사 결과는 이메일로 안내드려요.<br />
+            심사는 영업일 기준 1~3일 정도 걸릴 수 있어요.
+          </p>
+        </>
+      ) : loggedIn ? (
+        <p className={s.desc}>이 계정으로 접수된 가입 신청이 심사 중이 아니에요.</p>
+      ) : (
+        <p className={s.desc}>로그인하면 신청한 내용과 심사 상태를 확인할 수 있어요.</p>
+      )}
 
-        <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>⏳</div>
-
-        <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
-          승인 대기 중
-        </h1>
-        <p style={{ fontSize: '0.88rem', color: '#64748b', lineHeight: 1.7, marginBottom: 24 }}>
-          가입 신청이 접수됐습니다.<br />
-          관리자 심사 후 승인 시 이용 가능합니다.<br />
-          심사는 영업일 기준 1~3일 소요될 수 있습니다.
-        </p>
-
-        <Link href="/login" style={{
-          display: 'inline-block',
-          padding: '10px 24px',
-          background: '#2563eb',
-          color: '#fff',
-          borderRadius: 8,
-          fontSize: '0.88rem',
-          fontWeight: 500,
-          textDecoration: 'none',
-        }}>
-          로그인 페이지로
-        </Link>
+      <div className={s.actions}>
+        {loggedIn && destination && destination !== '/pending' && (
+          <Link href={destination} className={s.btn}>{DESTINATION_LABEL[destination]}</Link>
+        )}
+        {!loggedIn && <Link href="/login" className={s.btn}>로그인</Link>}
+        <Link href="/" className={s.btnGhost}>메인으로 가기</Link>
+        {loggedIn && <LogoutButton />}
       </div>
-    </div>
+    </StatusCard>
   )
 }

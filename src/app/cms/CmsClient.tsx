@@ -254,7 +254,6 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
           </div>
           <div className={s.topbarRight}>
             <Link href="/" className={`${s.btn} ${s.btnGhost}`}>사이트 보기 ↗</Link>
-            <Link href="/admin" className={`${s.btn} ${s.btnGhost}`}>Admin ↗</Link>
           </div>
         </div>
 

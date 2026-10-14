@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { createClient, createAdminClient } from '@/lib/supabase-server'
 import { buildCollections, loadGameStats } from '@/lib/curation'
+import { resolveDestination } from '@/lib/auth-destination'
 import AdminClient from './AdminClient'
 
 export default async function AdminPage() {
@@ -10,13 +11,9 @@ export default async function AdminPage() {
   const { data: { user } } = await authSupabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // 관리자 이메일 검증 (서버 전용 환경변수)
-  const adminEmails = (process.env.ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((e) => e.trim())
-    .filter(Boolean)
-
-  if (!adminEmails.includes(user.email!)) redirect('/login')
+  // 관리자가 아니면 규칙대로 (/login으로 되돌리지 않음 — 무한 이동 방지)
+  const { destination } = await resolveDestination(user)
+  if (destination !== '/admin') redirect(destination)
 
   const supabase = createAdminClient()
 

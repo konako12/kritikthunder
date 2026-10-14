@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
+import { resolveDestination } from '@/lib/auth-destination'
 import LoginClient from './LoginClient'
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
@@ -18,17 +19,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (user) {
-    // 승인된 기자이면 /cms, 그 외는 /admin
-    const { data: journalist } = await supabase
-      .from('journalists')
-      .select('id')
-      .eq('email', user.email!)
-      .eq('status', 'approved')
-      .maybeSingle()
-
-    redirect(journalist ? '/cms' : '/admin')
-  }
+  // 이미 로그인했으면 규칙대로 이동 (절대 /admin으로 일괄 보내지 않음 — 무한 이동 원인이었음)
+  if (user) redirect((await resolveDestination(user)).destination)
 
   const params = await searchParams
   const notice = NOTICES[String(params.notice ?? '')] ?? ''

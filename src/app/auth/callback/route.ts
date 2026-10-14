@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { resolveDestination } from '@/lib/auth-destination'
 import { RECOVERY_COOKIE, RECOVERY_COOKIE_MAX_AGE, safeNextPath } from '@/lib/auth-recovery'
 
 export async function GET(req: NextRequest) {
@@ -35,7 +36,9 @@ export async function GET(req: NextRequest) {
           maxAge: RECOVERY_COOKIE_MAX_AGE,
         })
       }
-      return NextResponse.redirect(`${origin}${next ?? '/pending'}`)
+      // next가 없으면(가입 인증 메일) 이동 규칙대로
+      const dest = next ?? (await resolveDestination((await supabase.auth.getUser()).data.user)).destination
+      return NextResponse.redirect(`${origin}${dest}`)
     }
   }
 
