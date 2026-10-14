@@ -12,6 +12,10 @@ export interface Game {
   critic_score: number | null
   status: 'published' | 'draft' | 'upcoming'
   cover_url: string | null
+  /** 메인 히어로 배너 전용 이미지 (없으면 cover_url) — SQL 011 */
+  hero_image_url?: string | null
+  /** 히어로 이미지 초점: 'left' | 'center' | 'right' 또는 '0%'~'100%' — SQL 011 */
+  hero_focus?: string | null
   description: string | null
   age_rating: string
   created_at: string

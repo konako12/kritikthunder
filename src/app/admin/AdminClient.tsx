@@ -10,6 +10,7 @@ import { gameTitleMatches } from '@/lib/utils'
 import { REJECTION_REASON_MAX, REJECTION_REASON_PRESETS, kstDate } from '@/lib/journalist-review'
 import { PLATFORMS, normalizePlatform, platformLabels } from '@/lib/platforms'
 import TranslatableDescription from './TranslatableDescription'
+import HeroImageField, { type HeroDraft, heroDraftFrom, heroDraftChanged, heroSaveError } from './HeroImageField'
 import CriticReviewsPanel from './CriticReviewsPanel'
 import NewsPanel from './NewsPanel'
 import CollectionsPanel, { type CollectionSummary } from './CollectionsPanel'
@@ -94,6 +95,9 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
   const [news, setNews] = useState<News[]>(initNews)
   const [featuredId, setFeaturedId] = useState(initFeatId)
   const [tmpFeatId, setTmpFeatId] = useState(initFeatId)
+  // 메인 노출 설정 — 선택한 게임의 히어로 이미지
+  const [featHero, setFeatHero] = useState<HeroDraft>(() => heroDraftFrom(initGames.find((g) => g.id === initFeatId) ?? {}))
+  const [featHeroSaving, setFeatHeroSaving] = useState(false)
 
   // 검색/필터
   const [gSearch, setGSearch] = useState('')
@@ -133,6 +137,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
   const [editGame, setEditGame] = useState<Game | null>(null)
   const [editFile, setEditFile] = useState<File | null>(null)
   const [editPreview, setEditPreview] = useState('')
+  const [editHero, setEditHero] = useState<HeroDraft>(heroDraftFrom({}))
 
   // 토스트
   const [toast, setToast] = useState('')
@@ -178,6 +183,40 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
     const data = await res.json()
     if (!res.ok) { showToast('이미지 업로드 실패: ' + (data.error ?? '알 수 없는 오류')); return null }
     return data.url
+  }
+
+  /** 히어로 이미지 저장값 — 새 파일이면 업로드. 업로드 실패 시 null */
+  async function resolveHero(d: HeroDraft): Promise<{ hero_image_url: string | null; hero_focus: string | null } | null> {
+    let url = d.url
+    if (d.file) {
+      const uploaded = await uploadGameCover(d.file)
+      if (!uploaded) return null
+      url = uploaded
+    }
+    return { hero_image_url: url, hero_focus: d.focus }
+  }
+
+  function selectFeatured(id: number) {
+    setTmpFeatId(id)
+    setFeatHero(heroDraftFrom(games.find((g) => g.id === id) ?? {}))
+  }
+
+  async function saveFeatHero() {
+    const g = games.find((x) => x.id === tmpFeatId)
+    if (!g) return
+    setFeatHeroSaving(true)
+    try {
+      const hero = await resolveHero(featHero)
+      if (!hero) return
+      const data = await apiCall(`/api/games/${g.id}`, 'PATCH', hero)
+      setGames(games.map((x) => (x.id === data.id ? data : x)))
+      setFeatHero(heroDraftFrom(data))
+      showToast(`🖼️ "${data.title}" 히어로 이미지 설정을 저장했어요`)
+    } catch (e) {
+      showToast(`⚠️ ${heroSaveError((e as Error).message)}`)
+    } finally {
+      setFeatHeroSaving(false)
+    }
   }
 
   function handleFileSelect(
@@ -311,6 +350,13 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
   async function saveEdit() {
     if (!editGame) return
     try {
+      // 히어로 이미지는 바뀌었을 때만 보냄 (SQL 011 실행 전에도 다른 칸은 수정 가능)
+      let hero: Awaited<ReturnType<typeof resolveHero>> = null
+      const original = games.find((g) => g.id === editGame.id) ?? editGame
+      if (heroDraftChanged(editHero, original)) {
+        hero = await resolveHero(editHero)
+        if (!hero) return
+      }
       let coverUrl = editGame.cover_url
       if (editFile) {
         const uploaded = await uploadGameCover(editFile)
@@ -323,11 +369,13 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
         year: editGame.year, release_date: editGame.release_date || null,
         genre: editGame.genre, status: editGame.status,
         cover_url: coverUrl, platforms: editGame.platforms,
+        ...(hero ?? {}),
       })
       setGames(games.map((g) => (g.id === data.id ? data : g)))
       setEditGame(null); setEditFile(null); setEditPreview('')
+      if (data.id === tmpFeatId) setFeatHero(heroDraftFrom(data))
       showToast(`✅ "${data.title}" 정보가 수정됐어요`)
-    } catch (e: unknown) { showToast(`⚠️ ${(e as Error).message}`) }
+    } catch (e: unknown) { showToast(`⚠️ ${heroSaveError((e as Error).message)}`) }
   }
 
   /** 승인·거절 후 결과 안내 메일 발송 여부를 함께 알려줌 */
@@ -625,7 +673,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                           <td><span className={`${s.chip} ${scoreChipClass(g.critic_score)}`}>{g.critic_score ?? 'TBD'}</span></td>
                           <td><span className={`${s.badge} ${sb.cls}`}>{sb.label}</span></td>
                           <td>
-                            <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} style={{ marginRight: 4 }} onClick={() => { setEditGame({ ...g, platforms: g.platforms.map(normalizePlatform) }); setEditFile(null); setEditPreview(g.cover_url ?? '') }}>수정</button>
+                            <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} style={{ marginRight: 4 }} onClick={() => { setEditGame({ ...g, platforms: g.platforms.map(normalizePlatform) }); setEditFile(null); setEditPreview(g.cover_url ?? ''); setEditHero(heroDraftFrom(g)) }}>수정</button>
                             <button className={`${s.btn} ${s.btnDanger} ${s.btnSm}`} onClick={() => deleteGame(g.id, g.title)}>삭제</button>
                           </td>
                         </tr>
@@ -852,7 +900,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                 <div className={s.featGrid}>
                   {/* 공개 + 출시 예정 게임 (임시저장 제외) */}
                   {games.filter((g) => g.status === 'published' || g.status === 'upcoming').map((g) => (
-                    <div key={g.id} className={`${s.fcard} ${tmpFeatId === g.id ? s.fcardSel : ''}`} onClick={() => setTmpFeatId(g.id)}>
+                    <div key={g.id} className={`${s.fcard} ${tmpFeatId === g.id ? s.fcardSel : ''}`} onClick={() => selectFeatured(g.id)}>
                       {tmpFeatId === g.id && <div className={s.fcardChk}>✓</div>}
                       {g.status === 'upcoming' && <div className={s.fcardUpcoming}>출시 예정</div>}
                       {g.cover_url && <img src={g.cover_url} alt={g.title} />}
@@ -864,10 +912,31 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                   ))}
                 </div>
                 <div className={s.featActions}>
-                  <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setTmpFeatId(featuredId)}>취소</button>
+                  <button className={`${s.btn} ${s.btnGhost}`} onClick={() => selectFeatured(featuredId)}>취소</button>
                   <button className={`${s.btn} ${s.btnPrimary}`} onClick={saveFeatured}>저장하기</button>
                 </div>
               </div>
+              {(() => {
+                const g = games.find((x) => x.id === tmpFeatId)
+                if (!g) return null
+                return (
+                  <div className={s.card} style={{ marginTop: '1.5rem' }}>
+                    <div className={s.cardHead}>
+                      <span className={s.cardTitle}>히어로 이미지 — {g.title}</span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted-light)' }}>위에서 고른 게임의 메인 배너 이미지</span>
+                    </div>
+                    <div style={{ padding: '1.2rem' }}>
+                      <HeroImageField draft={featHero} onChange={setFeatHero} coverUrl={g.cover_url} title={g.title} onError={showToast} />
+                    </div>
+                    <div className={s.featActions}>
+                      <button className={`${s.btn} ${s.btnGhost}`} onClick={() => setFeatHero(heroDraftFrom(g))} disabled={featHeroSaving}>되돌리기</button>
+                      <button className={`${s.btn} ${s.btnPrimary}`} onClick={saveFeatHero} disabled={featHeroSaving || !heroDraftChanged(featHero, g)}>
+                        {featHeroSaving ? '저장 중...' : '이미지 설정 저장'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )}
 
@@ -1068,6 +1137,11 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                 <div className={s.uploadHint}>JPG, PNG, WebP · 최대 5MB</div>
                 <div className={s.uploadOr}>또는 URL 직접 입력</div>
                 <input className={s.formInput} value={editGame.cover_url ?? ''} onChange={(e) => { setEditGame({ ...editGame, cover_url: e.target.value || null }); setEditFile(null); setEditPreview(e.target.value) }} placeholder="https://..." disabled={!!editFile} />
+              </div>
+              <div className={s.formGroup}>
+                <label className={s.formLabel}>히어로 이미지 (메인 배너)</label>
+                <HeroImageField draft={editHero} onChange={setEditHero} coverUrl={editPreview || editGame.cover_url}
+                  title={editGame.title} onError={showToast} />
               </div>
             </div>
             <div className={s.modalFoot}>

@@ -102,19 +102,20 @@
 }
 .heroBg {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; object-position: center 20%;
-  /* 상단 70% 원본 이미지가 선명하게 보이도록 brightness 높임 */
-  filter: brightness(0.88) saturate(1.05);
+  object-fit: cover; object-position: 50% 20%; /* 실제 위치는 hero_focus로 인라인 지정 */
+  /* 이미지 전체는 어둡게 하지 않음 — 글자 영역만 아래 그라데이션으로 */
+  filter: saturate(1.05);
   transform: scale(1.04);
   animation: slowZoom 14s ease-out forwards;
 }
+/* 글자 영역(왼쪽 아래)만 진하게 — 오른쪽 인물·배경은 원본 그대로 */
 .heroVignette {
   position: absolute; inset: 0;
   background:
-    /* 텍스트 좌측 가독성 — 기존보다 훨씬 옅게 */
-    linear-gradient(to right, rgba(6,8,12,0.62) 0%, rgba(6,8,12,0.22) 32%, transparent 52%),
-    /* 하단 30%만 강하게 다크 처리 — 텍스트·버튼 보호 */
-    linear-gradient(to top, rgba(6,8,12,1) 0%, rgba(6,8,12,0.88) 12%, rgba(6,8,12,0.45) 26%, transparent 38%),
+    /* 왼쪽 → 오른쪽: 0~40% 약 85%, 60%부터 투명 */
+    linear-gradient(to right, rgba(6,8,12,0.85) 0%, rgba(6,8,12,0.82) 40%, rgba(6,8,12,0.4) 50%, transparent 60%),
+    /* 아래 → 위: 아래쪽 35% — 맨 아래는 페이지 배경과 이어지게 */
+    linear-gradient(to top, rgba(6,8,12,1) 0%, rgba(6,8,12,0.85) 12%, rgba(6,8,12,0.45) 25%, transparent 35%),
     /* 최상단 네비게이션 영역만 살짝 */
     linear-gradient(to bottom, rgba(6,8,12,0.38) 0%, transparent 10%);
 }
@@ -124,7 +125,7 @@
   padding: 0 2rem; position: relative; z-index: 2;
 }
 .heroBody {
-  padding-bottom: 5rem; max-width: 520px;
+  padding-bottom: 5rem; max-width: 560px; min-width: 0;
 }
 /* 왼쪽 게임 정보 + 오른쪽 평론가 점수 */
 .heroLayout {
@@ -137,25 +138,18 @@
   font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em;
   color: var(--gold); text-transform: uppercase; margin-bottom: 1rem;
 }
+/* 제목 — 한글·영어가 섞여도 한 서체로 (Bebas Neue에는 한글이 없어 섞이면 서체가 갈라짐) */
 .heroTitle {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.8rem, 6.5vw, 5.4rem); line-height: 0.94;
-  letter-spacing: 0.03em; color: #fff; margin-bottom: 0.9rem;
-  text-shadow: 0 2px 30px rgba(0,0,0,0.5);
+  font-family: 'Noto Sans KR', sans-serif; font-weight: 900;
+  font-size: clamp(2.3rem, 4.6vw, 3.9rem); line-height: 1.16;
+  letter-spacing: -0.025em; color: #fff; margin-bottom: 1rem;
+  word-break: keep-all; overflow-wrap: break-word;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.35), 0 4px 30px rgba(0,0,0,0.5);
 }
 .heroInfo {
-  display: flex; align-items: center; gap: 0.8rem;
-  margin-bottom: 1rem; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 0.5rem 0.6rem;
+  margin-bottom: 1.1rem; flex-wrap: wrap;
 }
-/* 점수 박스 공통 보정 — Bebas Neue는 글자 위 0.9em·아래 0.3em 공간에 숫자 높이가 0.7em이라
-   그냥 두면 숫자가 0.05em 위로 뜬다. line-height를 0.1em 줄이고 그만큼 위쪽 여백에 더해
-   박스 높이는 그대로 두고 숫자를 위아래 정가운데에 맞춘다. */
-.heroScore {
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem;
-  display: inline-flex; align-items: center; justify-content: center;
-  line-height: 0.9; padding: calc(0.08rem + 0.1em) 0.5rem 0.08rem; border-radius: 5px;
-}
-.heroScoreLabel { font-size: 0.67rem; color: var(--text-sub); }
 /* 메인 노출 게임이 출시 예정일 때 — 점수 대신 */
 .heroUpcoming {
   font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em;
@@ -163,14 +157,20 @@
   background: var(--gold); color: #1a1200;
 }
 .heroReleaseDate { font-family: 'DM Mono', monospace; font-size: 0.9rem; color: var(--text); letter-spacing: 0.04em; }
-.heroDivider { width: 1px; height: 20px; background: var(--border-hi); }
+.heroDivider { width: 1px; height: 20px; background: rgba(255,255,255,0.3); margin: 0 0.2rem; }
+/* 플랫폼 · 장르 태그 — 어두운 반투명 바탕 + 흰 글씨 */
 .heroTag {
-  padding: 0.2rem 0.6rem; border-radius: 3px;
-  background: rgba(255,255,255,0.08); border: 1px solid var(--border-hi);
-  font-size: 0.65rem; letter-spacing: 0.05em; color: var(--text-sub);
+  padding: 0.3rem 0.75rem; border-radius: 4px;
+  background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.28);
+  font-size: 0.8125rem; font-weight: 500; line-height: 1.4; color: #fff;
 }
+/* 소개글 — 최대 3줄, 은은한 그림자 */
 .heroDesc {
-  font-size: 0.84rem; color: rgba(200,205,220,0.8); line-height: 1.72; margin-bottom: 1.6rem;
+  font-size: 1rem; font-weight: 400; line-height: 1.7; color: #e8ebf0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6), 0 2px 12px rgba(0,0,0,0.45);
+  word-break: keep-all; overflow-wrap: break-word;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  margin-bottom: 1.6rem;
 }
 .heroBtns { display: flex; gap: 0.75rem; }
 .btnPrimary {
@@ -437,7 +437,13 @@
   .heroOuter { padding: 0 1.2rem; }
   .heroLayout { flex-direction: column; align-items: stretch; gap: 1.6rem; }
   .heroBody { padding-bottom: 0; max-width: 100%; min-width: 0; }
-  .heroTitle { font-size: 2.6rem; }
+  .heroTitle { font-size: 2.1rem; }
+  /* 모바일은 글자가 화면 전체 폭이라 아래쪽을 더 높이까지 어둡게 */
+  .heroVignette {
+    background:
+      linear-gradient(to top, rgba(6,8,12,1) 0%, rgba(6,8,12,0.85) 30%, rgba(6,8,12,0.55) 50%, transparent 68%),
+      linear-gradient(to bottom, rgba(6,8,12,0.38) 0%, transparent 10%);
+  }
   .hscroll { padding-left: 1.2rem; }
   .navLinks a:not(.loginBtn) { display: none; }
   .reviewGrid { grid-template-columns: 1fr; }

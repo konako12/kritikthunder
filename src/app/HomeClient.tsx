@@ -9,6 +9,7 @@ import { PLATFORM_GROUPS, inPlatformGroup, platformLabels, type PlatformGroup } 
 import type { Collection } from '@/lib/curation'
 import CollectionCard from './collections/CollectionCard'
 import HeroAccolades from './HeroAccolades'
+import { heroImage, heroObjectPosition } from '@/lib/hero'
 import NewsCard from '@/components/news/NewsCard'
 import cs from './collections/collections.module.css'
 import ns from '@/components/news/news.module.css'
@@ -115,8 +116,9 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
       {/* ── HERO ── */}
       {featured && (
         <div className={s.hero}>
-          {featured.cover_url && (
-            <img className={s.heroBg} src={featured.cover_url} alt={featured.title} />
+          {heroImage(featured) && (
+            <img className={s.heroBg} src={heroImage(featured)!} alt=""
+              style={{ objectPosition: heroObjectPosition(featured) }} />
           )}
           <div className={s.heroVignette} />
           {/* 콘텐츠만 1280px 제한 */}
@@ -125,18 +127,11 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
               <div className={s.heroBadge}>▶ &nbsp;이번 주 에디터 픽</div>
               <h1 className={s.heroTitle}>{featured.title}</h1>
               <div className={s.heroInfo}>
-                {featuredUpcoming ? (
+                {/* 점수는 오른쪽 KRITIK 종합 점수 하나만 — 출시 예정이면 배지 + 출시일 */}
+                {featuredUpcoming && (
                   <>
                     <div className={s.heroUpcoming}>출시 예정</div>
                     <div className={s.heroReleaseDate}>{formatReleaseDate(featured)}</div>
-                    <div className={s.heroDivider} />
-                  </>
-                ) : featured.critic_score !== null && (
-                  <>
-                    <div className={`${s.heroScore} ${scoreClass(featured.critic_score)}`}>
-                      {featured.critic_score}
-                    </div>
-                    <div className={s.heroScoreLabel}>전문가 점수</div>
                     <div className={s.heroDivider} />
                   </>
                 )}

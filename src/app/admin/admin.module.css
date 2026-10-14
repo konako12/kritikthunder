@@ -593,3 +593,46 @@
   padding: 0.55rem 0.75rem; margin-bottom: 0.8rem; font-size: 0.75rem; line-height: 1.5; color: #7c2d12;
 }
 .prevReasonLabel { display: block; font-size: 0.62rem; font-weight: 700; color: var(--orange); margin-bottom: 0.15rem; }
+
+/* ── 히어로 이미지 (메인 배너) ── */
+.heroField { min-width: 0; }
+.heroPreviews { display: flex; gap: 0.8rem; align-items: flex-end; margin-bottom: 0.5rem; }
+.heroPrev { margin: 0; display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.heroPrev figcaption { font-size: 0.65rem; color: var(--text-muted-light); text-align: center; }
+.heroPrevDesk, .heroPrevMobile {
+  position: relative; overflow: hidden; border-radius: 6px; background: #06080c;
+  border: 1px solid var(--border-light);
+}
+.heroPrevDesk { width: 320px; max-width: 100%; aspect-ratio: 16 / 9; }
+.heroPrevMobile { width: 76px; aspect-ratio: 9 / 16; }
+.heroPrevDesk img, .heroPrevMobile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* 메인 페이지 .heroVignette와 같은 그라데이션 */
+.heroPrevShade {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, rgba(6,8,12,0.85) 0%, rgba(6,8,12,0.82) 40%, rgba(6,8,12,0.4) 50%, transparent 60%),
+    linear-gradient(to top, rgba(6,8,12,1) 0%, rgba(6,8,12,0.85) 12%, rgba(6,8,12,0.45) 25%, transparent 35%);
+}
+.heroPrevShadeMobile {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(6,8,12,1) 0%, rgba(6,8,12,0.85) 30%, rgba(6,8,12,0.55) 50%, transparent 68%);
+}
+.heroPrevText {
+  position: absolute; left: 6%; bottom: 12%; width: 36%;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.heroPrevTitle {
+  font-size: 0.8rem; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 2px;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.heroPrevLine { display: block; height: 3px; border-radius: 2px; background: rgba(232,235,240,0.55); width: 100%; }
+.heroFocusRow { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.heroFocusLabel { font-size: 0.75rem; font-weight: 600; color: var(--text-sub-light); margin-right: 0.3rem; }
+.heroFocusBtn {
+  padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-light);
+  background: var(--surface); color: var(--text-sub-light); font-size: 0.75rem; cursor: pointer; font-family: inherit;
+}
+.heroFocusBtn:hover { border-color: var(--border-hi-light); }
+.heroFocusBtnOn { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); font-weight: 600; }
+.heroFocusRange { flex: 1; min-width: 100px; margin-left: 0.4rem; accent-color: var(--blue); }
+.heroFocusVal { font-size: 0.72rem; color: var(--text-muted-light); min-width: 2.6rem; text-align: right; }
