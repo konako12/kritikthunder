@@ -133,33 +133,44 @@
 .emptyMsg { text-align: center; padding: 2.5rem; color: var(--text-muted); font-size: 0.85rem; }
 
 /* ── CRITIC REVIEW ── */
+/* 전문가 리뷰 카드 — 점수 + 매체명/기자명 → 본문 → 날짜 + 원문 보기 */
 .reviewCard {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 8px; padding: 1.3rem 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s;
+  background: var(--card-raised); border: 1px solid var(--card-raised-border);
+  border-radius: 10px; padding: 1.5rem 1.75rem 1.35rem; margin-bottom: 1rem; transition: border-color 0.2s;
 }
 .reviewCard:hover { border-color: var(--border-active); }
-.reviewTop {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem;
-}
-.reviewerInfo { display: flex; align-items: center; gap: 0.8rem; }
+.reviewTop { display: flex; align-items: center; gap: 1rem; }
+.reviewerInfo { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.reviewMedia { font-size: 0.875rem; font-weight: 700; color: var(--text); line-height: 1.35; }
+/* 사이드바 "참여 전문지" 칩 */
 .mediaLogoText {
-  font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 500;
-  letter-spacing: 0.08em; padding: 0.2rem 0.6rem; border-radius: 3px;
-  background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-secondary);
+  font-size: 0.8125rem; font-weight: 600;
+  padding: 0.2rem 0.6rem; border-radius: 4px;
+  background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-body);
 }
-.reviewerName { font-size: 0.78rem; color: var(--text-secondary); }
+.reviewerName { font-size: 0.8125rem; color: var(--text-meta); }
+/* 점수 — Bebas Neue 숫자가 위로 뜨는 서체 여백 보정 (메인 페이지 점수와 같은 방식) */
 .criticScore {
-  font-family: 'Bebas Neue', sans-serif; font-size: 2rem; line-height: 1;
-  min-width: 60px; text-align: center; padding: 0.2rem 0.6rem; border-radius: 5px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.3rem; min-width: 3.6rem; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 0.9; padding: calc(0.15rem + 0.1em) 0.6rem 0.15rem; border-radius: 6px;
 }
 .csGreat { color: #fff; background: var(--score-great); }
 .csGood { color: #1a1a1a; background: var(--accent-gold); }
 .csBad { color: #fff; background: var(--score-bad); }
-.reviewText { font-size: 0.85rem; line-height: 1.7; color: var(--text-secondary); }
-.reviewDate {
-  font-size: 0.7rem; color: var(--text-muted); margin-top: 0.7rem;
-  font-family: 'DM Mono', monospace;
+.reviewText {
+  font-size: 1rem; font-weight: 400; line-height: 1.7; color: var(--text-body);
+  margin: 1.1rem 0 0;
 }
+.reviewTextClamp {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.moreBtn {
+  margin-top: 0.4rem; padding: 0; background: none; border: none;
+  font-size: 0.8125rem; font-weight: 600; color: var(--text-meta);
+}
+.moreBtn:hover { color: var(--text); text-decoration: underline; }
+.reviewDate { font-size: 0.8125rem; color: var(--text-meta); }
 
 /* ── USER REVIEW ── */
 .userReviewCard {
@@ -262,18 +273,17 @@
 /* ── 원문 링크 ── */
 .reviewFoot {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem; flex-wrap: wrap; margin-top: 0.7rem;
+  gap: 1rem; flex-wrap: wrap; margin-top: 1.1rem;
 }
-.reviewFoot .reviewDate { margin-top: 0; }
 .sourceLink {
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.3rem 0.7rem; border-radius: 4px;
   border: 1px solid var(--border-hi, rgba(255,255,255,0.16));
-  font-size: 0.72rem; font-weight: 600; color: var(--gold);
+  font-size: 0.8125rem; font-weight: 600; color: var(--gold);
   transition: background 0.15s, border-color 0.15s;
 }
 .sourceLink:hover { background: var(--gold-dim); border-color: rgba(245,200,66,0.4); }
-.sourceDomain { font-family: 'DM Mono', monospace; font-weight: 400; color: var(--text-muted); }
+.sourceDomain { font-weight: 400; color: var(--text-meta); }
 
 /* ── 관련 뉴스 ── */
 .newsSection { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border); }

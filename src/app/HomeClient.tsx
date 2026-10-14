@@ -280,30 +280,31 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
             {reviews.map((r) => {
               const game = allGames.find((g) => g.id === r.game_id)
               return (
-                <div key={r.id} className={s.reviewCard}>
+                <article key={r.id} className={s.reviewCard}>
+                  {game && (
+                    <Link href={`/games/${game.id}`} className={s.rcGameRow}>
+                      {game.cover_url && <img src={game.cover_url} alt="" className={s.rcImg} />}
+                      <span className={s.rcGame}>{game.title}</span>
+                    </Link>
+                  )}
                   <div className={s.rcTop}>
-                    {game?.cover_url && (
-                      <img src={game.cover_url} alt={game.title} className={s.rcImg} />
-                    )}
-                    <div>
-                      <div className={s.rcGame}>{game?.title ?? '—'}</div>
-                      <div className={s.rcMedia}>{r.media}</div>
-                    </div>
                     <div className={`${s.rcScore} ${scoreClass(r.score)}`}>{r.score}</div>
-                  </div>
-                  <div className={s.rcBody}>
-                    <div className={s.rcText}>{r.review_text}</div>
-                    <div className={s.rcFoot}>
-                      <span className={s.rcName}>{r.reviewer_name}</span>
-                      <span className={s.rcDate}>{r.published_at}</span>
+                    <div className={s.rcWho}>
+                      <div className={s.rcMedia}>{r.media}</div>
+                      <div className={s.rcName}>{r.reviewer_name}</div>
                     </div>
+                  </div>
+                  <p className={s.rcText}>{r.review_text}</p>
+                  <div className={s.rcFoot}>
+                    <span className={s.rcDate}>{r.published_at.replaceAll('-', '.')}</span>
                     {r.source_url && (
-                      <a href={r.source_url} target="_blank" rel="noopener noreferrer" className={s.rcSource}>
-                        원문 보기 ↗ <span className={s.rcSourceDomain}>{sourceDomain(r.source_url)}</span>
+                      <a href={r.source_url} target="_blank" rel="noopener noreferrer" className={s.rcSource}
+                        title={sourceDomain(r.source_url)}>
+                        원문 보기 ↗
                       </a>
                     )}
                   </div>
-                </div>
+                </article>
               )
             })}
           </div>

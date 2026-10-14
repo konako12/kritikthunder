@@ -22,6 +22,10 @@ type Tab = 'critic' | 'user' | 'write'
 
 export default function GameDetailClient({ game, criticReviews, userReviews: initUserReviews, avgStars: initAvgStars, news }: Props) {
   const [tab, setTab] = useState<Tab>('critic')
+  // 전문가 리뷰 본문은 3줄까지 보여주고, 긴 리뷰는 "더 보기"로 펼침
+  const [expanded, setExpanded] = useState<Set<number>>(new Set())
+  const toggleExpand = (id: number) =>
+    setExpanded((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
   const [userReviews, setUserReviews] = useState(initUserReviews)
   const [avgStars, setAvgStars] = useState(initAvgStars)
 
@@ -198,28 +202,37 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
                 {criticReviews.length === 0 && (
                   <div className={s.emptyMsg}>아직 전문가 리뷰가 없습니다.</div>
                 )}
-                {criticReviews.map((r) => (
-                  <div key={r.id} className={s.reviewCard}>
-                    <div className={s.reviewTop}>
-                      <div className={s.reviewerInfo}>
-                        <span className={s.mediaLogoText}>{r.media}</span>
-                        <span className={s.reviewerName}>{r.reviewer_name}</span>
+                {criticReviews.map((r) => {
+                  const open = expanded.has(r.id)
+                  return (
+                    <article key={r.id} className={s.reviewCard}>
+                      {/* 위: 점수(가장 크게) + 매체명 / 기자명 */}
+                      <div className={s.reviewTop}>
+                        <div className={`${s.criticScore} ${
+                          r.score >= 90 ? s.csGreat : r.score >= 75 ? s.csGood : s.csBad
+                        }`}>{r.score}</div>
+                        <div className={s.reviewerInfo}>
+                          <span className={s.reviewMedia}>{r.media}</span>
+                          <span className={s.reviewerName}>{r.reviewer_name}</span>
+                        </div>
                       </div>
-                      <div className={`${s.criticScore} ${
-                        r.score >= 90 ? s.csGreat : r.score >= 75 ? s.csGood : s.csBad
-                      }`}>{r.score}</div>
-                    </div>
-                    <div className={s.reviewText}>{r.review_text}</div>
-                    <div className={s.reviewFoot}>
-                      <span className={s.reviewDate}>{r.published_at}</span>
-                      {r.source_url && (
-                        <a href={r.source_url} target="_blank" rel="noopener noreferrer" className={s.sourceLink}>
-                          원문 보기 ↗ <span className={s.sourceDomain}>{sourceDomain(r.source_url)}</span>
-                        </a>
+                      {/* 가운데: 본문 (3줄, 길면 더 보기) */}
+                      <p className={`${s.reviewText} ${open ? '' : s.reviewTextClamp}`}>{r.review_text}</p>
+                      {r.review_text.length > 120 && (
+                        <button className={s.moreBtn} onClick={() => toggleExpand(r.id)}>{open ? '접기' : '더 보기'}</button>
                       )}
-                    </div>
-                  </div>
-                ))}
+                      {/* 아래: 날짜 + 원문 보기 */}
+                      <div className={s.reviewFoot}>
+                        <span className={s.reviewDate}>{r.published_at.replaceAll('-', '.')}</span>
+                        {r.source_url && (
+                          <a href={r.source_url} target="_blank" rel="noopener noreferrer" className={s.sourceLink}>
+                            원문 보기 ↗ <span className={s.sourceDomain}>{sourceDomain(r.source_url)}</span>
+                          </a>
+                        )}
+                      </div>
+                    </article>
+                  )
+                })}
               </div>
             )}
 

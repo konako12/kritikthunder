@@ -321,40 +321,46 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 }
+/* 카드 순서: 게임 → 점수 + 매체명/기자명 → 본문(3줄) → 날짜 + 원문 보기 */
 .reviewCard {
-  background: var(--card);
-  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
-  cursor: pointer; transition: border-color 0.18s;
+  background: var(--card-raised);
+  border: 1px solid var(--card-raised-border); border-radius: 10px; overflow: hidden;
+  transition: border-color 0.18s;
   display: flex; flex-direction: column;
+  padding: 1.15rem 1.25rem 1.1rem;
 }
 .reviewCard:hover { border-color: var(--border-hi); }
-.rcTop {
-  display: flex; align-items: center; gap: 0.75rem;
-  padding: 0.9rem; border-bottom: 1px solid var(--border);
+/* 어떤 게임의 리뷰인지 — 맨 위 작은 줄 */
+.rcGameRow {
+  display: flex; align-items: center; gap: 0.55rem; min-width: 0;
+  padding-bottom: 0.85rem; margin-bottom: 0.95rem; border-bottom: 1px solid var(--card-raised-border);
+  color: inherit;
 }
-.rcImg { width: 36px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-.rcGame { font-size: 0.8rem; font-weight: 700; line-height: 1.25; }
-.rcMedia { font-size: 0.63rem; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 0.12rem; }
+.rcGameRow:hover .rcGame { color: var(--gold); }
+.rcImg { width: 28px; height: 37px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+.rcGame {
+  font-size: 0.875rem; font-weight: 700; line-height: 1.35; transition: color 0.15s;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.rcTop { display: flex; align-items: center; gap: 0.85rem; min-width: 0; }
 .rcScore {
-  margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem;
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; min-width: 3.4rem;
   display: inline-flex; align-items: center; justify-content: center;
-  line-height: 0.9; padding: calc(0.08rem + 0.1em) 0.45rem 0.08rem; border-radius: 4px; flex-shrink: 0;
+  line-height: 0.9; padding: calc(0.12rem + 0.1em) 0.5rem 0.12rem; border-radius: 6px; flex-shrink: 0;
 }
-.rcBody { padding: 0.85rem 1rem; flex: 1; display: flex; flex-direction: column; }
+.rcWho { min-width: 0; }
+.rcMedia { font-size: 0.875rem; font-weight: 700; color: var(--text); line-height: 1.35; }
+.rcName { font-size: 0.8125rem; color: var(--text-meta); margin-top: 0.15rem; }
 .rcText {
-  font-size: 0.78rem; color: var(--text-sub); line-height: 1.72; flex: 1;
-  /* 3줄 미리보기 */
+  font-size: 0.9375rem; font-weight: 400; color: var(--text-body); line-height: 1.7;
+  margin: 1rem 0 1.1rem; flex: 1;
+  /* 최대 3줄, 넘치면 말줄임표 */
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-.rcFoot { display: flex; justify-content: space-between; margin-top: 0.7rem; }
-.rcName { font-size: 0.65rem; color: var(--text-muted); }
-.rcDate { font-size: 0.62rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
-.rcSource {
-  display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.6rem; align-self: flex-start;
-  font-size: 0.68rem; font-weight: 600; color: var(--gold);
-}
+.rcFoot { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.rcDate { font-size: 0.8125rem; color: var(--text-meta); }
+.rcSource { font-size: 0.8125rem; font-weight: 600; color: var(--gold); white-space: nowrap; }
 .rcSource:hover { text-decoration: underline; }
-.rcSourceDomain { font-family: 'DM Mono', monospace; font-weight: 400; color: var(--text-muted); }
 
 /* ══════════════════════════════════════════
    UPCOMING 기대작 카드
