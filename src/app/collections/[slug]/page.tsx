@@ -40,9 +40,9 @@ export default async function CollectionDetailPage({ params }: { params: Params 
           <Link href={`/games/${g.id}`} key={g.id} className={s.row}>
             <span className={`${s.rank} ${i < 3 ? s.rankTop : ''}`}>{i < 3 ? MEDALS[i] : i + 1}</span>
             {g.cover_url ? (
-              <img src={g.cover_url} alt={g.title} className={s.cover} />
+              <img src={g.cover_url} alt="" className={s.cover} />
             ) : (
-              <span className={s.coverFallback}>{g.title[0]}</span>
+              <span className={s.coverFallback} aria-hidden>{g.title[0]}</span>
             )}
             <span className={s.info}>
               <span className={s.title}>{g.title}</span>

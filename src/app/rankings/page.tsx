@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { CopyrightYear, SrSep } from '@/components/a11y'
 import AccountLinks from '@/components/AccountLinks'
 import { createClient } from '@/lib/supabase-server'
 import { scoreClass } from '@/lib/utils'
@@ -166,9 +167,9 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
                   <Link href={`/games/${g.id}`} key={g.id} className={`${s.podiumCard} ${i === 0 ? s.podiumFirst : ''}`}>
                     <div className={s.podiumCoverWrap}>
                       {g.cover_url ? (
-                        <img src={g.cover_url} alt={g.title} className={s.podiumCover} />
+                        <img src={g.cover_url} alt="" className={s.podiumCover} />
                       ) : (
-                        <div className={s.podiumCoverFallback}>{g.title[0]}</div>
+                        <div className={s.podiumCoverFallback} aria-hidden>{g.title[0]}</div>
                       )}
                       <span className={s.podiumMedal}>{MEDALS[i]}</span>
                     </div>
@@ -178,9 +179,9 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
                         <div className={`${s.scoreChip} ${scoreClass(g.critic_score)}`}>{g.critic_score}</div>
                       </div>
                       <div className={s.tags}>
-                        <span className={s.tag}>{g.genre}</span>
-                        {platformLabels(g.platforms).map((p) => (
-                          <span key={p} className={`${s.tag} ${s.tagPlatform}`}>{p}</span>
+                        <span className={s.tag}>{g.genre}{g.platforms.length > 0 && <SrSep />}</span>
+                        {platformLabels(g.platforms).map((p, i, arr) => (
+                          <span key={p} className={`${s.tag} ${s.tagPlatform}`}>{p}{i < arr.length - 1 && <SrSep />}</span>
                         ))}
                       </div>
                     </div>
@@ -205,9 +206,9 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
                     <span className={s.rank}>{rankOffset + i + 1}</span>
                     <span className={s.coverCol}>
                       {g.cover_url ? (
-                        <img src={g.cover_url} alt={g.title} className={s.cover} />
+                        <img src={g.cover_url} alt="" className={s.cover} />
                       ) : (
-                        <span className={s.coverFallback}>{g.title[0]}</span>
+                        <span className={s.coverFallback} aria-hidden>{g.title[0]}</span>
                       )}
                     </span>
                     <span className={s.info}>
@@ -248,7 +249,7 @@ export default async function RankingsPage({ searchParams }: { searchParams: Sea
             <div className={s.ftSub}>국내 게임 전문 평점 서비스</div>
           </div>
           <div>
-            <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
+            <div className={s.ftText}>© <CopyrightYear /> KRITIK. All rights reserved.</div>
             <div className={s.pressLinks}>
               <AccountLinks />
             </div>
@@ -278,9 +279,9 @@ function VsList({ title, rows }: { title: string; rows: VsRow[] }) {
             <Link href={`/games/${g.id}`} key={g.id} className={s.vsRow}>
               <span className={s.coverCol}>
                 {g.cover_url ? (
-                  <img src={g.cover_url} alt={g.title} className={s.cover} />
+                  <img src={g.cover_url} alt="" className={s.cover} />
                 ) : (
-                  <span className={s.coverFallback}>{g.title[0]}</span>
+                  <span className={s.coverFallback} aria-hidden>{g.title[0]}</span>
                 )}
               </span>
               <span className={s.info}>

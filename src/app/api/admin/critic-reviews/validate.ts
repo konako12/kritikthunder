@@ -1,4 +1,4 @@
-import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, SCORE_DISPLAY_MAX } from '@/lib/utils'
+import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, isValidScoreDisplay, SCORE_DISPLAY_HINT, SCORE_DISPLAY_MAX } from '@/lib/utils'
 import { verdictError } from '@/lib/review-verdict'
 
 /**
@@ -41,6 +41,7 @@ export function pickReviewFields(body: Record<string, unknown>, { partial }: { p
   if (!partial || has('score_display')) {
     const v = normalizeScoreDisplay(String(body.score_display ?? ''))
     if (v && v.length > SCORE_DISPLAY_MAX) return { error: `원래 점수 표기는 ${SCORE_DISPLAY_MAX}자 이내로 입력해주세요` }
+    if (!isValidScoreDisplay(v)) return { error: SCORE_DISPLAY_HINT }
     if (v !== null || partial) out.score_display = v // 새 등록 시 빈 값은 보내지 않음
   }
   // 원문 인용 문장 — 새 등록은 필수, 수정 때 빈 값이면 인용 삭제

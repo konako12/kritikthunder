@@ -5,7 +5,7 @@ import AccountLinks from '@/components/AccountLinks'
 import { ReviewVerdict } from '@/components/review/ReviewVerdict'
 import { createClient } from '@/lib/supabase-server'
 import type { CriticReview, Game } from '@/lib/types'
-import { scoreClass, sourceDomain } from '@/lib/utils'
+import { isValidScoreDisplay, scoreClass, sourceDomain } from '@/lib/utils'
 import { platformLabels } from '@/lib/platforms'
 import s from './review.module.css'
 
@@ -83,7 +83,7 @@ export default async function ReviewPage({ params }: { params: Params }) {
               <div className={s.reviewer}>{r.reviewer_name}</div>
               <div className={s.meta}>
                 {r.published_at.replaceAll('-', '.')}
-                {r.score_display && <> · 원래 점수 {r.score_display}</>}
+                {r.score_display && isValidScoreDisplay(r.score_display) && <> · 원래 점수 {r.score_display}</>}
               </div>
             </div>
           </div>

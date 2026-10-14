@@ -13,7 +13,7 @@ export default function CollectionCard({ collection: c }: { collection: Collecti
       <div className={s.stack}>
         {top3.map((g, i) => (
           <div key={g.id} className={`${s.stackItem} ${STACK[i]}`}>
-            {g.cover_url ? <img src={g.cover_url} alt={g.title} /> : <span>{g.title[0]}</span>}
+            {g.cover_url ? <img src={g.cover_url} alt="" /> : <span aria-hidden>{g.title[0]}</span>}
           </div>
         ))}
       </div>

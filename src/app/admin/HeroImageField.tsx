@@ -66,7 +66,7 @@ export default function HeroImageField({ draft, onChange, coverUrl, title, onErr
       <div className={s.heroPreviews}>
         <figure className={s.heroPrev}>
           <div className={s.heroPrevDesk}>
-            {src && <img src={src} alt="" style={{ objectPosition }} />}
+            {src && <img src={src} alt={`${title} 히어로 이미지 미리보기 (PC)`} style={{ objectPosition }} />}
             <div className={s.heroPrevShade} />
             <div className={s.heroPrevText}>
               <span className={s.heroPrevTitle}>{title || '게임 제목'}</span>
@@ -77,7 +77,7 @@ export default function HeroImageField({ draft, onChange, coverUrl, title, onErr
         </figure>
         <figure className={s.heroPrev}>
           <div className={s.heroPrevMobile}>
-            {src && <img src={src} alt="" style={{ objectPosition }} />}
+            {src && <img src={src} alt={`${title} 히어로 이미지 미리보기 (모바일)`} style={{ objectPosition }} />}
             <div className={s.heroPrevShadeMobile} />
           </div>
           <figcaption>모바일</figcaption>

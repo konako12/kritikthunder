@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import type { Game, CriticReview, UserReview, NewsWithGame } from '@/lib/types'
-import { scoreClass, formatDate, initial, sourceDomain } from '@/lib/utils'
+import { scoreClass, formatDate, initial, sourceDomain, coverAlt } from '@/lib/utils'
+import { SrSep } from '@/components/a11y'
 import { ReviewVerdict, FullReviewLink } from '@/components/review/ReviewVerdict'
 import { createClient } from '@/lib/supabase-client'
 import { platformLabels } from '@/lib/platforms'
@@ -96,12 +97,12 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
       {/* HERO */}
       <div className={s.hero}>
         {game.cover_url && (
-          <img className={s.heroImg} src={game.cover_url} alt={game.title} />
+          <img className={s.heroImg} src={game.cover_url} alt="" aria-hidden />
         )}
         <div className={s.heroGradient} />
         <div className={s.heroContent}>
           {game.cover_url && (
-            <img className={s.gameCover} src={game.cover_url} alt={game.title} />
+            <img className={s.gameCover} src={game.cover_url} alt={coverAlt(game.title)} />
           )}
           <div className={s.gameMeta}>
             <h1>{game.title}</h1>
@@ -113,9 +114,9 @@ export default function GameDetailClient({ game, criticReviews, userReviews: ini
             </div>
             <div className={s.tags}>
               {platformLabels(game.platforms).map((p) => (
-                <span key={p} className={`${s.tag} ${s.platform}`}>{p}</span>
+                <span key={p} className={`${s.tag} ${s.platform}`}>{p}<SrSep /></span>
               ))}
-              <span className={s.tag}>{game.genre}</span>
+              <span className={s.tag}>{game.genre}<SrSep /></span>
               <span className={s.tag}>{game.age_rating}</span>
             </div>
           </div>

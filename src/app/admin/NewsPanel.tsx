@@ -369,7 +369,7 @@ export default function NewsPanel({ games, news, setNews, showToast }: Props) {
               <label className={s.formLabel}>관련 게임 (선택)</label>
               {selGame ? (
                 <div className={s.newsGameSel}>
-                  {selGame.cover_url && <img src={selGame.cover_url} alt="" className={s.gameThumb} />}
+                  {selGame.cover_url && <img src={selGame.cover_url} alt={`${selGame.title} 커버`} className={s.gameThumb} />}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className={s.gameName}>{selGame.title}</div>
                     <div className={s.gameDev}>{selGame.developer} · {selGame.year}</div>

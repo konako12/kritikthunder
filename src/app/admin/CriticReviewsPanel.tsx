@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { CriticReview, Game } from '@/lib/types'
-import { isValidSourceUrl, sourceDomain, SCORE_DISPLAY_MAX } from '@/lib/utils'
+import { isValidSourceUrl, isValidScoreDisplay, sourceDomain, SCORE_DISPLAY_HINT, SCORE_DISPLAY_MAX } from '@/lib/utils'
 import { VERDICT_MAX, verdictError, verdictLength } from '@/lib/review-verdict'
 import s from './admin.module.css'
 
@@ -69,6 +69,7 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
     if (!media.trim()) e.media = '매체명을 입력해주세요'
     if (!reviewer.trim()) e.reviewer = '기자명을 입력해주세요'
     if (score === '' || !Number.isInteger(n) || n < 0 || n > 100) e.score = '0~100 사이 정수'
+    if (!isValidScoreDisplay(scoreDisplay)) e.scoreDisplay = SCORE_DISPLAY_HINT
     const qErr = verdictError(quote, '원문 인용 문장')
     if (qErr) e.quote = qErr
     if (!url.trim()) e.url = '원문 기사 링크를 입력해주세요'
@@ -131,6 +132,24 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
       [gameTitle(r.game_id), r.media, r.reviewer_name].some((v) => v.toLowerCase().includes(query)))
   const missingCount = reviews.filter((r) => !r.verdict).length
 
+  // 게임 연결이 없는 리뷰 — 게임이 없거나(삭제 등) 임시저장 게임에 붙어 있어 메인 한줄평 카드에 안 나오는 리뷰
+  const orphanReason = (r: CriticReview): string | null => {
+    const g = games.find((x) => x.id === r.game_id)
+    if (!g) return `게임 #${r.game_id} 없음`
+    if (g.status === 'draft') return `임시저장 게임: ${g.title}`
+    return null
+  }
+  const orphans = reviews.filter((r) => orphanReason(r) !== null)
+  const [relinkId, setRelinkId] = useState<number | null>(null)
+  const [relinkGame, setRelinkGame] = useState('')
+
+  async function relink(id: number) {
+    if (!relinkGame) { showToast('⚠️ 연결할 게임을 골라주세요'); return }
+    if (await patch(id, { game_id: Number(relinkGame) }, `🔗 "${gameTitle(Number(relinkGame))}"에 연결했어요`)) {
+      setRelinkId(null); setRelinkGame('')
+    }
+  }
+
   return (
     <div>
       {/* ── 외부 리뷰 등록 ── */}
@@ -168,7 +187,8 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
             <div className={s.formGroup}>
               <label className={s.formLabel}>원래 점수 표기</label>
               <input className={s.formInput} value={scoreDisplay} maxLength={SCORE_DISPLAY_MAX}
-                onChange={(e) => setScoreDisplay(e.target.value)} placeholder={`예) 9.5/10 · 비우면 ${score || '96'}/100`} />
+                onChange={(e) => setScoreDisplay(e.target.value)} placeholder={`예) 9/10, 4.5/5 · 비우면 ${score || '96'}/100`} />
+              {errors.scoreDisplay && <span className={s.formError}>{errors.scoreDisplay}</span>}
             </div>
           </div>
           <div className={s.formGrid}>
@@ -203,6 +223,48 @@ export default function CriticReviewsPanel({ games, reviews, setReviews, showToa
           </div>
         </div>
       </div>
+
+      {/* ── 게임 연결이 없는 리뷰 ── */}
+      {orphans.length > 0 && (
+        <div className={s.card} style={{ marginBottom: '1.5rem', borderColor: 'var(--orange-border)' }}>
+          <div className={s.cardHead}>
+            <span className={s.cardTitle}>게임 연결이 없는 리뷰 <span style={{ color: 'var(--orange)' }}>({orphans.length})</span></span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted-light)' }}>공개 화면의 한줄평 카드에 나오지 않아요 — 게임을 다시 연결해주세요</span>
+          </div>
+          <table className={s.table}>
+            <thead><tr><th>연결 상태</th><th>매체 / 기자</th><th>점수</th><th>게재일</th><th>게임 연결</th></tr></thead>
+            <tbody>
+              {orphans.map((r) => (
+                <tr key={r.id}>
+                  <td><span className={`${s.badge} ${s.bOrange}`} style={{ textTransform: 'none' }}>{orphanReason(r)}</span></td>
+                  <td>
+                    <div className={s.gameName}>{r.media}</div>
+                    <div className={s.gameDev}>{r.reviewer_name}</div>
+                  </td>
+                  <td><span className={`${s.chip} ${scoreChipClass(r.score)}`}>{r.score}</span></td>
+                  <td><span style={{ fontFamily: "'DM Mono',monospace", fontSize: '0.78rem' }}>{r.published_at}</span></td>
+                  <td style={{ minWidth: 300 }}>
+                    {relinkId === r.id ? (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <select className={s.formSelect} value={relinkGame} onChange={(e) => setRelinkGame(e.target.value)}>
+                          <option value="">게임 선택...</option>
+                          {[...games].filter((g) => g.status !== 'draft').sort((a, b) => a.title.localeCompare(b.title)).map((g) => (
+                            <option key={g.id} value={g.id}>{g.title} ({g.year})</option>
+                          ))}
+                        </select>
+                        <button className={`${s.btn} ${s.btnPrimary} ${s.btnSm}`} onClick={() => relink(r.id)}>연결</button>
+                        <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} onClick={() => setRelinkId(null)}>취소</button>
+                      </div>
+                    ) : (
+                      <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} onClick={() => { setRelinkId(r.id); setRelinkGame('') }}>게임 다시 연결</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* ── 전체 리뷰 목록 ── */}
       <div className={s.toolbar}>

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import type { CriticReview, Game, Journalist, News, Report } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
 import ChangePasswordForm from '@/components/ChangePasswordForm'
-import { gameTitleMatches } from '@/lib/utils'
+import { coverAlt, gameTitleMatches } from '@/lib/utils'
 import { REJECTION_REASON_MAX, REJECTION_REASON_PRESETS, kstDate } from '@/lib/journalist-review'
 import { PLATFORMS, normalizePlatform, platformLabels } from '@/lib/platforms'
 import TranslatableDescription from './TranslatableDescription'
@@ -575,7 +575,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                         return (
                           <tr key={g.id}>
                             <td><div className={s.gameCell}>
-                              {g.cover_url && <img src={g.cover_url} className={s.gameThumb} alt={g.title} />}
+                              {g.cover_url && <img src={g.cover_url} className={s.gameThumb} alt={coverAlt(g.title)} />}
                               <div><div className={s.gameName}>{g.title}</div><div className={s.gameDev}>{g.developer}</div></div>
                             </div></td>
                             <td><span className={`${s.chip} ${scoreChipClass(g.critic_score)}`}>{g.critic_score ?? 'TBD'}</span></td>
@@ -621,7 +621,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                         <button className={`${s.btn} ${s.btnGhost} ${s.btnSm}`} onClick={() => setPage('featured')}>변경</button>
                       </div>
                       <div className={s.featCur}>
-                        {featured.cover_url && <img src={featured.cover_url} alt={featured.title} className={s.featCurImg} />}
+                        {featured.cover_url && <img src={featured.cover_url} alt={coverAlt(featured.title)} className={s.featCurImg} />}
                         <div>
                           <div className={s.featCurLabel}>메인 노출 중</div>
                           <div className={s.featCurTitle}>{featured.title}</div>
@@ -664,7 +664,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                       return (
                         <tr key={g.id}>
                           <td><div className={s.gameCell}>
-                            {g.cover_url && <img src={g.cover_url} className={s.gameThumb} alt={g.title} />}
+                            {g.cover_url && <img src={g.cover_url} className={s.gameThumb} alt={coverAlt(g.title)} />}
                             <div><div className={s.gameName}>{g.title}</div><div className={s.gameDev}>{g.developer}</div></div>
                           </div></td>
                           <td><span style={{ fontSize: '0.78rem' }}>{g.genre}</span></td>
@@ -723,7 +723,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                     {igdbResults.map((r) => (
                       <button key={r.igdb_id} className={s.igdbCard} onClick={() => applyIgdbResult(r)}>
                         {r.cover_thumb ? (
-                          <img src={r.cover_thumb} alt={r.title} className={s.igdbCardImg} />
+                          <img src={r.cover_thumb} alt="" className={s.igdbCardImg} />
                         ) : (
                           <div className={s.igdbCardImgFallback}>{r.title[0]}</div>
                         )}
@@ -832,7 +832,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                     <label className={s.formLabel}>커버 이미지</label>
                     {(fPreview || fImg) && (
                       <div className={s.imgPreviewWrap}>
-                        <img className={s.imgPreview} src={fPreview || fImg} alt="미리보기" />
+                        <img className={s.imgPreview} src={fPreview || fImg} alt="커버 이미지 미리보기" />
                         <button className={s.imgRemove} onClick={() => { setFFile(null); setFPreview(''); setFImg(''); setIgdbCoverId(null) }}>제거</button>
                       </div>
                     )}
@@ -883,7 +883,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                 <div className={s.card} style={{ marginBottom: '1.5rem' }}>
                   <div className={s.cardHead}><span className={s.cardTitle}>현재 메인 노출 게임</span></div>
                   <div className={s.featCur} style={{ margin: '1rem 1.2rem' }}>
-                    {featured.cover_url && <img src={featured.cover_url} alt={featured.title} className={s.featCurImg} />}
+                    {featured.cover_url && <img src={featured.cover_url} alt={coverAlt(featured.title)} className={s.featCurImg} />}
                     <div>
                       <div className={s.featCurLabel}>현재 노출 중{featured.status === 'upcoming' && ' · 출시 예정'}</div>
                       <div className={s.featCurTitle}>{featured.title}</div>
@@ -903,7 +903,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                     <div key={g.id} className={`${s.fcard} ${tmpFeatId === g.id ? s.fcardSel : ''}`} onClick={() => selectFeatured(g.id)}>
                       {tmpFeatId === g.id && <div className={s.fcardChk}>✓</div>}
                       {g.status === 'upcoming' && <div className={s.fcardUpcoming}>출시 예정</div>}
-                      {g.cover_url && <img src={g.cover_url} alt={g.title} />}
+                      {g.cover_url && <img src={g.cover_url} alt={coverAlt(g.title)} />}
                       <div className={s.fcardBody}>
                         <div className={s.fcardTitle}>{g.title}</div>
                         <div className={s.fcardDev}>{g.developer}</div>
@@ -1125,7 +1125,7 @@ export default function AdminClient({ initGames, initJournalists, initReports, i
                 <label className={s.formLabel}>커버 이미지</label>
                 {(editPreview) && (
                   <div className={s.imgPreviewWrap}>
-                    <img className={s.imgPreview} src={editPreview} alt="미리보기" />
+                    <img className={s.imgPreview} src={editPreview} alt="커버 이미지 미리보기" />
                     <button className={s.imgRemove} onClick={() => { setEditFile(null); setEditPreview(''); setEditGame({ ...editGame, cover_url: null }) }}>제거</button>
                   </div>
                 )}

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { CopyrightYear, SrSep } from '@/components/a11y'
 import AccountLinks from '@/components/AccountLinks'
 import type { Game } from '@/lib/types'
 import { gameTitleMatches } from '@/lib/utils'
@@ -174,9 +175,9 @@ export default function GamesClient({ games }: Props) {
               <Link key={game.id} href={`/games/${game.id}`} className={s.card}>
                 <div className={s.cardImgWrap}>
                   {game.cover_url ? (
-                    <img className={s.cardImg} src={game.cover_url} alt={game.title} />
+                    <img className={s.cardImg} src={game.cover_url} alt="" />
                   ) : (
-                    <div className={s.cardImgFallback}>
+                    <div className={s.cardImgFallback} aria-hidden>
                       <span>{game.title[0]}</span>
                     </div>
                   )}
@@ -199,12 +200,12 @@ export default function GamesClient({ games }: Props) {
                   <div className={s.cardTitle}>{game.title}</div>
                   <div className={s.cardDev}>{game.developer} · {game.year}</div>
                   <div className={s.cardTags}>
-                    <span className={s.cardGenre}>{game.genre}</span>
-                    {platformLabels(game.platforms).slice(0, 2).map((p) => (
-                      <span key={p} className={s.cardPlatform}>{p}</span>
+                    <span className={s.cardGenre}>{game.genre}<SrSep /></span>
+                    {platformLabels(game.platforms).slice(0, 2).map((p, i, arr) => (
+                      <span key={p} className={s.cardPlatform}>{p}{(i < arr.length - 1 || game.platforms.length > 2) && <SrSep />}</span>
                     ))}
                     {game.platforms.length > 2 && (
-                      <span className={s.cardMore}>+{game.platforms.length - 2}</span>
+                      <span className={s.cardMore}><span aria-hidden>+{game.platforms.length - 2}</span><span className="sr-only">외 {game.platforms.length - 2}개 플랫폼</span></span>
                     )}
                   </div>
                 </div>
@@ -221,7 +222,7 @@ export default function GamesClient({ games }: Props) {
           <div className={s.ftSub}>국내 게임 전문 평점 서비스</div>
         </div>
         <div>
-          <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
+          <div className={s.ftText}>© <CopyrightYear /> KRITIK. All rights reserved.</div>
           <div className={s.pressLinks}>
             <AccountLinks />
           </div>

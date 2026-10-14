@@ -10,6 +10,7 @@ import { PLATFORM_GROUPS, inPlatformGroup, platformLabels, type PlatformGroup } 
 import type { Collection } from '@/lib/curation'
 import CollectionCard from './collections/CollectionCard'
 import HeroAccolades from './HeroAccolades'
+import { CopyrightYear, SrSep } from '@/components/a11y'
 import { heroImage, heroObjectPosition } from '@/lib/hero'
 import NewsCard from '@/components/news/NewsCard'
 import cs from './collections/collections.module.css'
@@ -20,7 +21,8 @@ interface Props {
   featured: Game | undefined
   heroReviews: CriticReview[]
   top5: Game[]
-  reviews: CriticReview[]
+  /** 게임 정보가 있는 리뷰만 (서버에서 연결) */
+  reviews: (CriticReview & { game: Pick<Game, 'id' | 'title' | 'cover_url'> })[]
   /** dday: 출시 15일 이내면 "D-15" · 당일 "D-DAY" (한국 시간, 서버 계산) */
   upcoming: (Pick<Game, 'id' | 'title' | 'developer' | 'cover_url' | 'year' | 'release_date'> & { dday: string | null })[]
   allGames: Game[]
@@ -97,7 +99,7 @@ export default function HomeClient({ featured, heroReviews, top5, reviews, upcom
                       className={s.sdItem}
                       onClick={() => { setSearchOpen(false); setSearchQ('') }}
                     >
-                      {g.cover_url && <img src={g.cover_url} alt={g.title} className={s.sdImg} />}
+                      {g.cover_url && <img src={g.cover_url} alt="" className={s.sdImg} />}
                       <div>
                         <div className={s.sdTitle}>{g.title}</div>
                         <div className={s.sdSub}>{g.developer} · {g.year}</div>
@@ -118,7 +120,7 @@ export default function HomeClient({ featured, heroReviews, top5, reviews, upcom
       {featured && (
         <div className={s.hero}>
           {heroImage(featured) && (
-            <img className={s.heroBg} src={heroImage(featured)!} alt=""
+            <img className={s.heroBg} src={heroImage(featured)!} alt={`${featured.title} 대표 이미지`}
               style={{ objectPosition: heroObjectPosition(featured) }} />
           )}
           <div className={s.heroVignette} />
@@ -137,7 +139,7 @@ export default function HomeClient({ featured, heroReviews, top5, reviews, upcom
                   </>
                 )}
                 {platformLabels(featured.platforms).map((p) => (
-                  <span key={p} className={s.heroTag}>{p}</span>
+                  <span key={p} className={s.heroTag}>{p}<SrSep /></span>
                 ))}
                 <span className={s.heroTag}>{featured.genre}</span>
               </div>
@@ -160,82 +162,80 @@ export default function HomeClient({ featured, heroReviews, top5, reviews, upcom
         </div>
       )}
 
-      {/* ── TOP 5 ── */}
-      <section className={s.section}>
-        <div className={s.wrap}>
-          <div className={s.rowHead}>
-            <div>
-              <span className={s.rowTitle}>
-                이번 주 인기 게임 <span className={s.hl}>TOP 5</span>
-              </span>
-              <span className={s.rowSub}>// 전문가 점수 기준</span>
+      {/* ── KRITIK 최고 평점 (전문가 점수 있는 게임만, 최대 5개) ── */}
+      {top5.length > 0 && (
+        <section className={s.section}>
+          <div className={s.wrap}>
+            <div className={s.rowHead}>
+              <div>
+                <span className={s.rowTitle}>
+                  KRITIK <span className={s.hl}>최고 평점</span>
+                </span>
+                <span className={s.rowSub}>// 전문가 점수 기준</span>
+              </div>
+              <Link href="/rankings" className={s.rowMore}>전체 보기 →</Link>
             </div>
-            <Link href="/rankings" className={s.rowMore}>전체 보기 →</Link>
-          </div>
-          <div className={s.top5List}>
-            {top5.map((g, i) => (
-              <Link href={`/games/${g.id}`} key={g.id} className={s.top5Item}>
-                <div className={`${s.top5N} ${i < 3 ? s.top5Gold : ''}`}>{i + 1}</div>
-                {g.cover_url && (
-                  <img src={g.cover_url} alt={g.title} className={s.top5Img} />
-                )}
-                <div className={s.top5Info}>
-                  <div className={s.top5T}>{g.title}</div>
-                  <div className={s.top5M}>{g.developer} · {g.year}</div>
-                  <div className={s.top5Tags}>
-                    {platformLabels(g.platforms).slice(0, 3).map((p) => <span key={p} className={s.tt}>{p}</span>)}
-                    <span className={s.tt}>{g.genre}</span>
+            <div className={s.top5List}>
+              {top5.map((g, i) => (
+                <Link href={`/games/${g.id}`} key={g.id} className={s.top5Item}>
+                  <div className={`${s.top5N} ${i < 3 ? s.top5Gold : ''}`}>{i + 1}</div>
+                  {g.cover_url && (
+                    <img src={g.cover_url} alt="" className={s.top5Img} />
+                  )}
+                  <div className={s.top5Info}>
+                    <div className={s.top5T}>{g.title}</div>
+                    <div className={s.top5M}>{g.developer} · {g.year}</div>
+                    <div className={s.top5Tags}>
+                      {platformLabels(g.platforms).slice(0, 3).map((p) => <span key={p} className={s.tt}>{p}<SrSep /></span>)}
+                      <span className={s.tt}>{g.genre}</span>
+                    </div>
                   </div>
-                </div>
-                {g.critic_score !== null ? (
                   <div className={`${s.t5s} ${scoreClass(g.critic_score)}`}>{g.critic_score}</div>
-                ) : (
-                  <div className={s.t5sTbd}>TBD</div>
-                )}
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── 전문가 최신 한줄평 — 전체 폭 격자 (PC 4열 · 태블릿 2열 · 모바일 1열) ── */}
-      <section className={s.section}>
-        <div className={s.wrap}>
-          <div className={s.rowHead}>
-            <span className={s.rowTitle}>전문가 <span className={s.hl}>최신 한줄평</span></span>
-          </div>
-          <div className={s.reviewGrid}>
-            {reviews.map((r) => {
-              const game = allGames.find((g) => g.id === r.game_id)
-              return (
-                <article key={r.id} className={s.reviewCard}>
-                  {game && (
+      {reviews.length > 0 && (
+        <section className={s.section}>
+          <div className={s.wrap}>
+            <div className={s.rowHead}>
+              <span className={s.rowTitle}>전문가 <span className={s.hl}>최신 한줄평</span></span>
+            </div>
+            <div className={s.reviewGrid}>
+              {reviews.map((r) => {
+                const game = r.game
+                return (
+                  <article key={r.id} className={s.reviewCard}>
                     <Link href={`/games/${game.id}`} className={s.rcGameRow}>
                       {game.cover_url && <img src={game.cover_url} alt="" className={s.rcImg} />}
                       <span className={s.rcGame}>{game.title}</span>
                     </Link>
-                  )}
-                  <div className={s.rcTop}>
-                    <div className={`${s.rcScore} ${scoreClass(r.score)}`}>{r.score}</div>
-                    <div className={s.rcWho}>
-                      <div className={s.rcMedia}>{r.media}</div>
-                      <div className={s.rcName}>{r.reviewer_name}</div>
+                    <div className={s.rcTop}>
+                      <div className={`${s.rcScore} ${scoreClass(r.score)}`}>{r.score}</div>
+                      <div className={s.rcWho}>
+                        <div className={s.rcMedia}>{r.media}</div>
+                        <div className={s.rcName}>{r.reviewer_name}</div>
+                      </div>
                     </div>
-                  </div>
-                  {/* 한줄평 (기자 본인 문장) — 없으면 전문 2줄 */}
-                  <div className={s.rcText}><ReviewVerdict review={r} /></div>
-                  <div className={s.rcFoot}>
-                    <span className={s.rcDate}>{r.published_at.replaceAll('-', '.')}</span>
-                    <span title={r.source_url ? sourceDomain(r.source_url) : undefined}>
-                      <FullReviewLink review={r} className={s.rcSource} />
-                    </span>
-                  </div>
-                </article>
-              )
-            })}
+                    {/* 한줄평 (기자 본인 문장) — 없으면 전문 2줄 */}
+                    <div className={s.rcText}><ReviewVerdict review={r} /></div>
+                    <div className={s.rcFoot}>
+                      <span className={s.rcDate}>{r.published_at.replaceAll('-', '.')}</span>
+                      <span title={r.source_url ? sourceDomain(r.source_url) : undefined}>
+                        <FullReviewLink review={r} className={s.rcSource} />
+                      </span>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── 출시 예정 기대작 ── */}
       {upcoming.length > 0 && (
@@ -251,7 +251,7 @@ export default function HomeClient({ featured, heroReviews, top5, reviews, upcom
               {upcoming.map((u) => (
                 <Link href={`/games/${u.id}`} key={u.id} className={s.uc}>
                   <div className={s.ucIw}>
-                    {u.cover_url && <img src={u.cover_url} alt={u.title} />}
+                    {u.cover_url && <img src={u.cover_url} alt="" />}
                     {/* 출시 15일 이내 — 한국 시간 기준 D-day (서버에서 계산) */}
                     {u.dday && <span className={s.dday}>{u.dday}</span>}
                     <div className={s.ucOv} />
@@ -331,7 +331,7 @@ export default function HomeClient({ featured, heroReviews, top5, reviews, upcom
             {pfGames.map((g) => (
               <Link href={`/games/${g.id}`} key={g.id} className={s.poster}>
                 <div className={s.posterIw}>
-                  {g.cover_url && <img src={g.cover_url} alt={g.title} />}
+                  {g.cover_url && <img src={g.cover_url} alt="" />}
                   <div className={s.posterOv} />
                   {g.critic_score !== null && (
                     <div className={`${s.posterScore} ${scoreClass(g.critic_score)}`}>
@@ -357,7 +357,7 @@ export default function HomeClient({ featured, heroReviews, top5, reviews, upcom
               <div className={s.ftTagline}>국내 게임 전문 평점 서비스</div>
             </div>
             <div className={s.ftText}>
-              © 2025 KRITIK. All rights reserved.<br />
+              © <CopyrightYear /> KRITIK. All rights reserved.<br />
               국내 게임 전문지 기자와 플레이어가 함께 만드는 신뢰할 수 있는 게임 정보
             </div>
             <div className={s.pressLinks}>

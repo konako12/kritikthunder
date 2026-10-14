@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { CopyrightYear, SrSep } from '@/components/a11y'
 import AccountLinks from '@/components/AccountLinks'
 import { createClient } from '@/lib/supabase-server'
 import { scoreClass } from '@/lib/utils'
@@ -190,7 +191,7 @@ export default async function ReleasesPage({ searchParams }: { searchParams: Sea
             <div className={s.ftSub}>국내 게임 전문 평점 서비스</div>
           </div>
           <div>
-            <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
+            <div className={s.ftText}>© <CopyrightYear /> KRITIK. All rights reserved.</div>
             <div className={s.pressLinks}>
               <AccountLinks />
             </div>
@@ -207,15 +208,15 @@ function GameRow({ game: g, showScore, note, dday }: { game: Game; showScore: bo
       {/* 출시 15일 이내 — 카드 좌상단 D-day (한국 시간 기준) */}
       {dday && <span className={s.dday}>{dday}</span>}
       {g.cover_url ? (
-        <img src={g.cover_url} alt={g.title} className={s.cover} />
+        <img src={g.cover_url} alt="" className={s.cover} />
       ) : (
-        <span className={s.coverFallback}>{g.title[0]}</span>
+        <span className={s.coverFallback} aria-hidden>{g.title[0]}</span>
       )}
       <span className={s.info}>
         <span className={s.title}>{g.title}</span>
         <span className={s.meta}>{note ?? g.developer}</span>
         <span className={s.tags}>
-          {platformLabels(g.platforms).map((p) => <span key={p} className={s.tag}>{p}</span>)}
+          {platformLabels(g.platforms).map((p, i, arr) => <span key={p} className={s.tag}>{p}{i < arr.length - 1 && <SrSep />}</span>)}
         </span>
       </span>
       {showScore && <span className={`${s.scoreChip} ${scoreClass(g.critic_score)}`}>{g.critic_score}</span>}

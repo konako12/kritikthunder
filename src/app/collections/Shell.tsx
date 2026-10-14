@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CopyrightYear } from '@/components/a11y'
 import type { ReactNode } from 'react'
 import s from './collections.module.css'
 
@@ -35,7 +36,7 @@ export default function Shell({ title, sub, children }: { title: string; sub: st
             <div className={s.ftLogo}>KRIT<span>IK</span></div>
             <div className={s.ftSub}>국내 게임 전문 평점 서비스</div>
           </div>
-          <div className={s.ftText}>© 2025 KRITIK. All rights reserved.</div>
+          <div className={s.ftText}>© <CopyrightYear /> KRITIK. All rights reserved.</div>
         </div>
       </footer>
     </div>

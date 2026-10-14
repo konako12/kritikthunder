@@ -6,7 +6,7 @@ import Link from 'next/link'
 import type { Journalist } from '@/lib/types'
 import { createClient } from '@/lib/supabase-client'
 import ChangePasswordForm from '@/components/ChangePasswordForm'
-import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, sourceDomain, SCORE_DISPLAY_MAX, gameTitleMatches } from '@/lib/utils'
+import { isValidSourceUrl, normalizeSourceUrl, normalizeScoreDisplay, isValidScoreDisplay, sourceDomain, coverAlt, SCORE_DISPLAY_HINT, SCORE_DISPLAY_MAX, gameTitleMatches } from '@/lib/utils'
 import { VERDICT_MAX, verdictError, verdictLength } from '@/lib/review-verdict'
 import s from './cms.module.css'
 
@@ -116,6 +116,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   async function submitReview() {
     if (!selGame) { setErrorMsg('게임을 선택해주세요'); return }
     if (!score || scoreNum < 0 || scoreNum > 100) { setErrorMsg('점수를 0~100 사이로 입력해주세요'); return }
+    if (!isValidScoreDisplay(scoreDisplay)) { setErrorMsg(SCORE_DISPLAY_HINT); return }
     const contentErr = checkContent(verdict, sourceUrl, reviewText)
     if (contentErr) { setErrorMsg(contentErr); return }
 
@@ -174,6 +175,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
   async function saveEdit(reviewId: number) {
     const n = Number(editScore)
     if (!editScore || n < 0 || n > 100) { alert('점수를 0~100 사이로 입력해주세요'); return }
+    if (!isValidScoreDisplay(editScoreDisplay)) { alert(SCORE_DISPLAY_HINT); return }
     const contentErr = checkContent(editVerdict, editSourceUrl, editText)
     if (contentErr) { alert(contentErr); return }
 
@@ -305,7 +307,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                     {selGame ? (
                       <div className={s.selectedGame}>
                         {selGame.cover_url && (
-                          <img src={selGame.cover_url} alt={selGame.title} className={s.selectedGameImg} />
+                          <img src={selGame.cover_url} alt={coverAlt(selGame.title)} className={s.selectedGameImg} />
                         )}
                         <div className={s.selectedGameInfo}>
                           <div className={s.selectedGameTitle}>{selGame.title}</div>
@@ -333,7 +335,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                                 onMouseDown={() => { setSelGame(g); setGameSearch(''); setGameDropOpen(false) }}
                               >
                                 {g.cover_url && (
-                                  <img src={g.cover_url} alt={g.title} className={s.gameDropImg} />
+                                  <img src={g.cover_url} alt="" className={s.gameDropImg} />
                                 )}
                                 <div>
                                   <div className={s.gameDropTitle}>{g.title}</div>
@@ -378,9 +380,10 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                     value={scoreDisplay}
                     maxLength={SCORE_DISPLAY_MAX}
                     onChange={(e) => setScoreDisplay(e.target.value)}
-                    placeholder="예) 9.5/10, 5/5, A-"
+                    placeholder="예) 9/10, 4.5/5"
                     style={{ maxWidth: 200 }}
                   />
+                  {!isValidScoreDisplay(scoreDisplay) && <div className={s.fieldError}>{SCORE_DISPLAY_HINT}</div>}
                 </div>
 
                 {/* 한줄평 */}
@@ -468,7 +471,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                   {selGame && (
                     <div className={s.previewGame}>
                       {selGame.cover_url && (
-                        <img src={selGame.cover_url} alt={selGame.title} className={s.previewGameImg} />
+                        <img src={selGame.cover_url} alt={coverAlt(selGame.title)} className={s.previewGameImg} />
                       )}
                       <div>
                         <div className={s.previewGameTitle}>{selGame.title}</div>
@@ -505,7 +508,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                         <div className={s.editFormTop}>
                           <div className={s.myRLeft}>
                             {game?.cover_url && (
-                              <img src={game.cover_url} alt={game.title} className={s.myRImg} />
+                              <img src={game.cover_url} alt={coverAlt(game.title)} className={s.myRImg} />
                             )}
                             <div>
                               <div className={s.myRGame}>{game?.title ?? `게임 #${r.game_id}`}</div>
@@ -545,9 +548,10 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                             <input
                               className={s.formInput} maxLength={SCORE_DISPLAY_MAX}
                               value={editScoreDisplay} onChange={(e) => setEditScoreDisplay(e.target.value)}
-                              placeholder={`비우면 ${editScore || '96'}/100`}
+                              placeholder={`예) 9/10 · 비우면 ${editScore || '96'}/100`}
                               style={{ maxWidth: 160 }}
                             />
+                            {!isValidScoreDisplay(editScoreDisplay) && <div className={s.fieldError}>{SCORE_DISPLAY_HINT}</div>}
                           </div>
                         </div>
 
@@ -606,7 +610,7 @@ export default function CmsClient({ games, journalist, initialReviews }: Props) 
                         <div className={s.myRTop}>
                           <div className={s.myRLeft}>
                             {game?.cover_url && (
-                              <img src={game.cover_url} alt={game.title} className={s.myRImg} />
+                              <img src={game.cover_url} alt={coverAlt(game.title)} className={s.myRImg} />
                             )}
                             <div>
                               <div className={s.myRGame}>{game?.title ?? `게임 #${r.game_id}`}</div>

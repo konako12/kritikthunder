@@ -255,13 +255,6 @@
   display: inline-flex; align-items: center; justify-content: center;
   line-height: 0.9; padding: calc(0.09rem + 0.1em) 0.63rem 0.09rem; border-radius: 7px; flex-shrink: 0;
 }
-/* DM Mono는 대문자가 이미 가운데에 오므로 정렬만 */
-.t5sTbd {
-  font-family: 'DM Mono', monospace; font-size: 0.96rem;
-  display: inline-flex; align-items: center; justify-content: center; line-height: 1;
-  padding: 0.15rem 0.72rem; border-radius: 7px;
-  background: var(--elevated); color: var(--text-muted); flex-shrink: 0;
-}
 
 /* ══════════════════════════════════════════
    HORIZONTAL SCROLL
