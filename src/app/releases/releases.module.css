@@ -109,6 +109,14 @@
   color: inherit; transition: border-color 0.18s, transform 0.15s;
 }
 .game:hover { border-color: var(--border-hi); transform: translateY(-2px); }
+.game { position: relative; }
+/* 출시 D-day — 카드 좌상단 빨간 박스 (메인 기대작과 같은 모양) */
+.dday {
+  position: absolute; top: -7px; left: -6px; z-index: 2;
+  padding: 0.18rem 0.45rem; border-radius: 4px;
+  background: #e5383b; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  font-family: 'Bebas Neue', sans-serif; font-size: 0.95rem; letter-spacing: 0.04em; line-height: 1;
+}
 .cover { width: 51px; height: 68px; object-fit: cover; border-radius: 5px; flex-shrink: 0; }
 .coverFallback {
   width: 51px; height: 68px; border-radius: 5px; flex-shrink: 0; background: var(--elevated);

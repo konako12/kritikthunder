@@ -5,9 +5,12 @@ import { createClient } from '@/lib/supabase-server'
 import { scoreClass } from '@/lib/utils'
 import { PLATFORM_GROUPS, parsePlatform, platformCodesInGroup, platformLabels, type PlatformGroup } from '@/lib/platforms'
 import type { Game } from '@/lib/types'
+import { ddayLabel, todayKst } from '@/lib/dday'
 import s from './releases.module.css'
 
+// 요청마다 새로 그림 — "오늘" 표시와 D-day가 한국 시간 날짜에 맞게 바뀜 (정적 캐시로 바꿔도 1시간 상한)
 export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -17,11 +20,6 @@ interface Filters {
   year: number
   month: number // 1–12
   platform: PlatformGroup | null
-}
-
-/** 한국 시간 기준 오늘 (YYYY-MM-DD) */
-function todayKst(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date())
 }
 
 function parseFilters(sp: Awaited<SearchParams>): Filters {
@@ -160,7 +158,7 @@ export default async function ReleasesPage({ searchParams }: { searchParams: Sea
                 </div>
                 <div className={s.dayGames}>
                   {list.map((g) => (
-                    <GameRow key={g.id} game={g} showScore={g.critic_score !== null && date <= today} />
+                    <GameRow key={g.id} game={g} showScore={g.critic_score !== null && date <= today} dday={ddayLabel(g.release_date, today)} />
                   ))}
                 </div>
               </section>
@@ -203,9 +201,11 @@ export default async function ReleasesPage({ searchParams }: { searchParams: Sea
   )
 }
 
-function GameRow({ game: g, showScore, note }: { game: Game; showScore: boolean; note?: string }) {
+function GameRow({ game: g, showScore, note, dday }: { game: Game; showScore: boolean; note?: string; dday?: string | null }) {
   return (
     <Link href={`/games/${g.id}`} className={s.game}>
+      {/* 출시 15일 이내 — 카드 좌상단 D-day (한국 시간 기준) */}
+      {dday && <span className={s.dday}>{dday}</span>}
       {g.cover_url ? (
         <img src={g.cover_url} alt={g.title} className={s.cover} />
       ) : (

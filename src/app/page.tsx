@@ -2,10 +2,13 @@ import { createClient } from '@/lib/supabase-server'
 import type { Game, CriticReview, NewsWithGame } from '@/lib/types'
 import { NEWS_PUBLIC_SELECT } from '@/lib/news'
 import { buildCollections, featuredCollections, loadGameStats } from '@/lib/curation'
+import { ddayLabel, isNotYetReleased, todayKst } from '@/lib/dday'
 import HomeClient from './HomeClient'
 
+// 요청마다 서버에서 새로 그림 (로그인 쿠키를 읽어 원래도 캐시되지 않음) — 출시 D-day가 날짜가 바뀌어도 그대로 남지 않게.
+// 나중에 정적 캐시로 바꾸더라도 1시간보다 오래 묵지 않도록 revalidate 상한을 둠.
 export const dynamic = 'force-dynamic'
-export const revalidate = 60 // 60초마다 재생성
+export const revalidate = 3600
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -40,14 +43,17 @@ export default async function HomePage() {
 
   const published = games.filter((g) => g.status === 'published')
   // 출시 예정 기대작 — 출시일이 가까운 순 (날짜 없는 게임은 연도순으로 뒤에)
+  //   출시일이 지난 게임은 상태가 아직 '출시 예정'이어도 제외 (한국 시간 기준)
+  const today = todayKst()
   const upcoming  = games
-    .filter((g) => g.status === 'upcoming')
+    .filter((g) => g.status === 'upcoming' && isNotYetReleased(g, today))
     .sort((a, b) =>
       a.release_date && b.release_date ? a.release_date.localeCompare(b.release_date)
       : a.release_date ? -1
       : b.release_date ? 1
       : a.year - b.year || a.title.localeCompare(b.title)
     )
+    .map((g) => ({ ...g, dday: ddayLabel(g.release_date, today) }))
   const top5      = [...published].sort((a, b) => (b.critic_score ?? 0) - (a.critic_score ?? 0)).slice(0, 5)
   const featured  = games.find((g) => g.id === featuredId && (g.status === 'published' || g.status === 'upcoming')) ?? published[0]
 
@@ -72,7 +78,6 @@ export default async function HomePage() {
       featured={featured}
       heroReviews={heroReviews}
       top5={top5}
-      recent={published}
       reviews={reviews}
       upcoming={upcoming}
       collections={collections}

@@ -195,7 +195,8 @@
 /* ══════════════════════════════════════════
    SECTION 공통
    ══════════════════════════════════════════ */
-.section { padding: 1.8rem 0; }
+/* 섹션 사이 여백 통일 */
+.section { padding: 2.25rem 0; }
 .rowHead {
   display: flex; align-items: baseline; justify-content: space-between;
   margin-bottom: 0.9rem;
@@ -297,13 +298,6 @@
   opacity: 0; transition: opacity 0.2s;
 }
 .poster:hover .posterOv { opacity: 1; }
-.posterHi {
-  position: absolute; bottom: 0; left: 0; right: 0; padding: 0.65rem;
-  transform: translateY(6px); opacity: 0; transition: all 0.2s;
-}
-.poster:hover .posterHi { transform: translateY(0); opacity: 1; }
-.phiT { font-size: 0.7rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.15rem; }
-.phiS { font-size: 0.58rem; color: rgba(200,205,220,0.65); }
 .posterScore {
   position: absolute; top: 0.45rem; right: 0.45rem;
   font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
@@ -364,6 +358,13 @@
 .uc { display: block; flex-shrink: 0; width: 152px; cursor: pointer; transition: transform 0.2s; color: inherit; }
 .uc:hover { transform: scale(1.05); }
 .ucIw { position: relative; border-radius: 6px; overflow: hidden; }
+/* 출시 D-day — 카드 좌상단 빨간 박스 */
+.dday {
+  position: absolute; top: 8px; left: 8px; z-index: 2;
+  padding: 0.2rem 0.5rem; border-radius: 4px;
+  background: #e5383b; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; letter-spacing: 0.04em; line-height: 1;
+}
 .ucIw img { width: 152px; height: 206px; object-fit: cover; }
 .ucOv {
   position: absolute; inset: 0;

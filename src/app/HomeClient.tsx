@@ -20,15 +20,15 @@ interface Props {
   featured: Game | undefined
   heroReviews: CriticReview[]
   top5: Game[]
-  recent: Game[]
   reviews: CriticReview[]
-  upcoming: Pick<Game, 'id' | 'title' | 'developer' | 'cover_url' | 'year' | 'release_date'>[]
+  /** dday: 출시 15일 이내면 "D-15" · 당일 "D-DAY" (한국 시간, 서버 계산) */
+  upcoming: (Pick<Game, 'id' | 'title' | 'developer' | 'cover_url' | 'year' | 'release_date'> & { dday: string | null })[]
   allGames: Game[]
   collections: Collection[]
   news: NewsWithGame[]
 }
 
-export default function HomeClient({ featured, heroReviews, top5, recent, reviews, upcoming, allGames, collections, news }: Props) {
+export default function HomeClient({ featured, heroReviews, top5, reviews, upcoming, allGames, collections, news }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [searchQ, setSearchQ] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -161,7 +161,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
       )}
 
       {/* ── TOP 5 ── */}
-      <section className={s.section} style={{ paddingTop: '2.5rem' }}>
+      <section className={s.section}>
         <div className={s.wrap}>
           <div className={s.rowHead}>
             <div>
@@ -170,7 +170,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
               </span>
               <span className={s.rowSub}>// 전문가 점수 기준</span>
             </div>
-            <Link href="/rankings" className={s.rowMore}>전체 랭킹 →</Link>
+            <Link href="/rankings" className={s.rowMore}>전체 보기 →</Link>
           </div>
           <div className={s.top5List}>
             {top5.map((g, i) => (
@@ -198,79 +198,11 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
         </div>
       </section>
 
-      {/* ── 추천 컬렉션 ── */}
-      {collections.length > 0 && (
-        <section className={s.section}>
-          <div className={s.wrap}>
-            <div className={s.rowHead}>
-              <div>
-                <span className={s.rowTitle}>추천 <span className={s.hl}>컬렉션</span></span>
-                <span className={s.rowSub}>// 전문가 점수로 자동 선정</span>
-              </div>
-              <Link href="/collections" className={s.rowMore}>전체 컬렉션 →</Link>
-            </div>
-            <div className={cs.grid}>
-              {collections.map((c) => <CollectionCard key={c.slug} collection={c} />)}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── 최신 게임 뉴스 — 고정 우선, 최근 4개 ── */}
-      {news.length > 0 && (
-        <section className={s.section}>
-          <div className={s.wrap}>
-            <div className={s.rowHead}>
-              <span className={s.rowTitle}>최신 <span className={s.hl}>게임 뉴스</span></span>
-              <Link href="/news" className={s.rowMore}>전체 뉴스 →</Link>
-            </div>
-            <div className={ns.grid}>
-              {news.map((n) => <NewsCard key={n.id} news={n} />)}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── 최근 리뷰된 게임 ── */}
+      {/* ── 전문가 최신 한줄평 — 전체 폭 격자 (PC 4열 · 태블릿 2열 · 모바일 1열) ── */}
       <section className={s.section}>
         <div className={s.wrap}>
           <div className={s.rowHead}>
-            <span className={s.rowTitle}>최근 <span className={s.hl}>리뷰된</span> 게임</span>
-            <Link href="/games" className={s.rowMore}>전체 보기 →</Link>
-          </div>
-        </div>
-        <div className={s.hsWrap}>
-          <div className={s.hscroll}>
-            {recent.map((g) => (
-              <Link href={`/games/${g.id}`} key={g.id} className={s.poster}>
-                <div className={s.posterIw}>
-                  {g.cover_url && <img src={g.cover_url} alt={g.title} />}
-                  <div className={s.posterOv} />
-                  <div className={s.posterHi}>
-                    <div className={s.phiT}>{g.title}</div>
-                    <div className={s.phiS}>{g.genre} · {g.year}</div>
-                  </div>
-                  {g.critic_score !== null && (
-                    <div className={`${s.posterScore} ${scoreClass(g.critic_score)}`}>
-                      {g.critic_score}
-                    </div>
-                  )}
-                </div>
-                <div className={s.posterT}>{g.title}</div>
-                <div className={s.posterS}>{g.developer}</div>
-              </Link>
-            ))}
-          </div>
-          <div className={s.fadeR} />
-        </div>
-      </section>
-
-      {/* ── 전문가 최신 리뷰 — 4열 고정 그리드 ── */}
-      <section className={s.section}>
-        <div className={s.wrap}>
-          <div className={s.rowHead}>
-            <span className={s.rowTitle}>전문가 <span className={s.hl}>최신 리뷰</span></span>
-            <Link href="/rankings" className={s.rowMore}>전체 랭킹 →</Link>
+            <span className={s.rowTitle}>전문가 <span className={s.hl}>최신 한줄평</span></span>
           </div>
           <div className={s.reviewGrid}>
             {reviews.map((r) => {
@@ -311,7 +243,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
           <div className={s.wrap}>
             <div className={s.rowHead}>
               <span className={s.rowTitle}>출시 예정 <span className={s.hl}>기대작</span></span>
-              <Link href="/releases" className={s.rowMore}>출시 일정 전체 보기 →</Link>
+              <Link href="/releases" className={s.rowMore}>전체 보기 →</Link>
             </div>
           </div>
           <div className={s.hsWrap}>
@@ -320,6 +252,8 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
                 <Link href={`/games/${u.id}`} key={u.id} className={s.uc}>
                   <div className={s.ucIw}>
                     {u.cover_url && <img src={u.cover_url} alt={u.title} />}
+                    {/* 출시 15일 이내 — 한국 시간 기준 D-day (서버에서 계산) */}
+                    {u.dday && <span className={s.dday}>{u.dday}</span>}
                     <div className={s.ucOv} />
                     <div className={s.ucBody}>
                       <div className={s.ucT}>{u.title}</div>
@@ -334,6 +268,39 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
               ))}
             </div>
             <div className={s.fadeR} />
+          </div>
+        </section>
+      )}
+
+      {/* ── 최신 게임 뉴스 — 고정 우선, 최근 4개 ── */}
+      {news.length > 0 && (
+        <section className={s.section}>
+          <div className={s.wrap}>
+            <div className={s.rowHead}>
+              <span className={s.rowTitle}>최신 <span className={s.hl}>게임 뉴스</span></span>
+              <Link href="/news" className={s.rowMore}>전체 보기 →</Link>
+            </div>
+            <div className={ns.grid}>
+              {news.map((n) => <NewsCard key={n.id} news={n} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── 추천 컬렉션 ── */}
+      {collections.length > 0 && (
+        <section className={s.section}>
+          <div className={s.wrap}>
+            <div className={s.rowHead}>
+              <div>
+                <span className={s.rowTitle}>추천 <span className={s.hl}>컬렉션</span></span>
+                <span className={s.rowSub}>// 전문가 점수로 자동 선정</span>
+              </div>
+              <Link href="/collections" className={s.rowMore}>전체 보기 →</Link>
+            </div>
+            <div className={cs.grid}>
+              {collections.map((c) => <CollectionCard key={c.slug} collection={c} />)}
+            </div>
           </div>
         </section>
       )}
