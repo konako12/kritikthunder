@@ -48,8 +48,10 @@
 .cardRank { font-family: 'DM Mono', monospace; color: var(--text-muted); width: 1rem; text-align: center; }
 .cardGame { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-sub); }
 .cardScore {
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; line-height: 1;
-  padding: 0.12rem 0.4rem; border-radius: 4px; flex-shrink: 0;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  /* Bebas Neue 숫자 위로 뜸 보정 — page.module.css .heroScore 주석 참고 */
+  line-height: 0.9; padding: calc(0.12rem + 0.1em) 0.4rem 0.12rem; border-radius: 4px; flex-shrink: 0;
 }
 .cardMore { margin-top: auto; padding-top: 0.85rem; font-size: 0.72rem; color: var(--text-muted); }
 .card:hover .cardMore { color: var(--gold); }

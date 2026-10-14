@@ -18,7 +18,7 @@ interface Props {
   top5: Game[]
   recent: Game[]
   reviews: CriticReview[]
-  upcoming: { title: string; developer: string; cover_url: string | null; year: number }[]
+  upcoming: Pick<Game, 'id' | 'title' | 'developer' | 'cover_url' | 'year' | 'release_date'>[]
   allGames: Game[]
   collections: Collection[]
   news: NewsWithGame[]
@@ -215,10 +215,7 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
         <section className={s.section}>
           <div className={s.wrap}>
             <div className={s.rowHead}>
-              <div>
-                <span className={s.rowTitle}>최신 <span className={s.hl}>게임 뉴스</span></span>
-                <span className={s.rowSub}>// 원문 매체로 연결</span>
-              </div>
+              <span className={s.rowTitle}>최신 <span className={s.hl}>게임 뉴스</span></span>
               <Link href="/news" className={s.rowMore}>전체 뉴스 →</Link>
             </div>
             <div className={ns.grid}>
@@ -308,27 +305,27 @@ export default function HomeClient({ featured, heroReviews, top5, recent, review
         <section className={s.section}>
           <div className={s.wrap}>
             <div className={s.rowHead}>
-              <div>
-                <span className={s.rowTitle}>출시 예정 <span className={s.hl}>기대작</span></span>
-                <span className={s.rowSub}>// 점수 미정 TBD</span>
-              </div>
+              <span className={s.rowTitle}>출시 예정 <span className={s.hl}>기대작</span></span>
               <Link href="/releases" className={s.rowMore}>출시 일정 전체 보기 →</Link>
             </div>
           </div>
           <div className={s.hsWrap}>
             <div className={s.hscroll}>
-              {upcoming.map((u, i) => (
-                <div key={i} className={s.uc}>
+              {upcoming.map((u) => (
+                <Link href={`/games/${u.id}`} key={u.id} className={s.uc}>
                   <div className={s.ucIw}>
                     {u.cover_url && <img src={u.cover_url} alt={u.title} />}
                     <div className={s.ucOv} />
                     <div className={s.ucBody}>
                       <div className={s.ucT}>{u.title}</div>
                       <div className={s.ucD}>{u.developer}</div>
-                      <div className={s.ucTbd}>TBD · {u.year}년 예정</div>
+                      {/* 정확한 날짜가 있으면 2026.10.15, 연도만 있으면 연도만 */}
+                      <div className={s.ucTbd}>
+                        {u.release_date ? u.release_date.replaceAll('-', '.') : `TBD · ${u.year}년 예정`}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
             <div className={s.fadeR} />

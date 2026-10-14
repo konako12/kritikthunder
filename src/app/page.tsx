@@ -39,7 +39,15 @@ export default async function HomePage() {
   )
 
   const published = games.filter((g) => g.status === 'published')
-  const upcoming  = games.filter((g) => g.status === 'upcoming')
+  // 출시 예정 기대작 — 출시일이 가까운 순 (날짜 없는 게임은 연도순으로 뒤에)
+  const upcoming  = games
+    .filter((g) => g.status === 'upcoming')
+    .sort((a, b) =>
+      a.release_date && b.release_date ? a.release_date.localeCompare(b.release_date)
+      : a.release_date ? -1
+      : b.release_date ? 1
+      : a.year - b.year || a.title.localeCompare(b.title)
+    )
   const top5      = [...published].sort((a, b) => (b.critic_score ?? 0) - (a.critic_score ?? 0)).slice(0, 5)
   const featured  = games.find((g) => g.id === featuredId) ?? published[0]
 

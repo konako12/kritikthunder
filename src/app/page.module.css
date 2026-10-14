@@ -89,7 +89,8 @@
 .sdSub { font-size: 0.64rem; color: var(--text-muted); }
 .sdScore {
   margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem;
-  padding: 0.12rem 0.38rem; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 0.9; padding: calc(0.12rem + 0.1em) 0.38rem 0.12rem; border-radius: 4px;
 }
 
 /* ══════════════════════════════════════════
@@ -146,9 +147,13 @@
   display: flex; align-items: center; gap: 0.8rem;
   margin-bottom: 1rem; flex-wrap: wrap;
 }
+/* 점수 박스 공통 보정 — Bebas Neue는 글자 위 0.9em·아래 0.3em 공간에 숫자 높이가 0.7em이라
+   그냥 두면 숫자가 0.05em 위로 뜬다. line-height를 0.1em 줄이고 그만큼 위쪽 여백에 더해
+   박스 높이는 그대로 두고 숫자를 위아래 정가운데에 맞춘다. */
 .heroScore {
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; line-height: 1;
-  padding: 0.08rem 0.5rem; border-radius: 5px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 0.9; padding: calc(0.08rem + 0.1em) 0.5rem 0.08rem; border-radius: 5px;
 }
 .heroScoreLabel { font-size: 0.67rem; color: var(--text-sub); }
 .heroDivider { width: 1px; height: 20px; background: var(--border-hi); }
@@ -213,13 +218,14 @@
   transition: border-color 0.18s, transform 0.15s; color: inherit;
 }
 .top5Item:hover { border-color: var(--border-hi); transform: translateX(4px); }
+/* 순위 숫자 — 1~3위는 금색, 4~5위는 차분한 색으로 꽉 채움 */
 .top5N {
   font-family: 'Bebas Neue', sans-serif; font-size: 2.32rem; line-height: 1;
   min-width: 38px; text-align: center;
-  -webkit-text-stroke: 1px var(--text-muted); color: transparent;
+  color: var(--text-sub);
   flex-shrink: 0;
 }
-.top5Gold { -webkit-text-stroke: 1px var(--gold); }
+.top5Gold { color: var(--gold); }
 .top5Img {
   width: 51px; height: 68px; object-fit: cover;
   border-radius: 5px; flex-shrink: 0;
@@ -237,11 +243,14 @@
 }
 /* 점수 칩 — 오른쪽 고정, 레이블 없음 */
 .t5s {
-  font-family: 'Bebas Neue', sans-serif; font-size: 2.17rem; line-height: 1;
-  padding: 0.09rem 0.63rem; border-radius: 7px; flex-shrink: 0;
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.17rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 0.9; padding: calc(0.09rem + 0.1em) 0.63rem 0.09rem; border-radius: 7px; flex-shrink: 0;
 }
+/* DM Mono는 대문자가 이미 가운데에 오므로 정렬만 */
 .t5sTbd {
   font-family: 'DM Mono', monospace; font-size: 0.96rem;
+  display: inline-flex; align-items: center; justify-content: center; line-height: 1;
   padding: 0.15rem 0.72rem; border-radius: 7px;
   background: var(--elevated); color: var(--text-muted); flex-shrink: 0;
 }
@@ -290,8 +299,9 @@
 .phiS { font-size: 0.58rem; color: rgba(200,205,220,0.65); }
 .posterScore {
   position: absolute; top: 0.45rem; right: 0.45rem;
-  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; line-height: 1;
-  padding: 0.12rem 0.38rem; border-radius: 4px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 0.9; padding: calc(0.12rem + 0.1em) 0.38rem 0.12rem; border-radius: 4px;
 }
 .posterT { font-size: 0.73rem; font-weight: 600; margin-top: 0.5rem; line-height: 1.3; }
 .posterS { font-size: 0.61rem; color: var(--text-muted); margin-top: 0.08rem; }
@@ -319,8 +329,9 @@
 .rcGame { font-size: 0.8rem; font-weight: 700; line-height: 1.25; }
 .rcMedia { font-size: 0.63rem; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 0.12rem; }
 .rcScore {
-  margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; line-height: 1;
-  padding: 0.08rem 0.45rem; border-radius: 4px; flex-shrink: 0;
+  margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 0.9; padding: calc(0.08rem + 0.1em) 0.45rem 0.08rem; border-radius: 4px; flex-shrink: 0;
 }
 .rcBody { padding: 0.85rem 1rem; flex: 1; display: flex; flex-direction: column; }
 .rcText {
@@ -341,7 +352,7 @@
 /* ══════════════════════════════════════════
    UPCOMING 기대작 카드
    ══════════════════════════════════════════ */
-.uc { flex-shrink: 0; width: 152px; cursor: pointer; transition: transform 0.2s; }
+.uc { display: block; flex-shrink: 0; width: 152px; cursor: pointer; transition: transform 0.2s; color: inherit; }
 .uc:hover { transform: scale(1.05); }
 .ucIw { position: relative; border-radius: 6px; overflow: hidden; }
 .ucIw img { width: 152px; height: 206px; object-fit: cover; }
